@@ -1,6 +1,6 @@
-<header class="barra">
-  <a class="logo" routerLink="/dominios">Dominio Seguro</a>
-  @if (auth.autenticado()) {
+@if (auth.autenticado()) {
+  <header class="barra">
+    <a class="logo" routerLink="/dominios">Dominio Seguro</a>
     <nav>
       <a routerLink="/dominios" routerLinkActive="activo">Mis dominios</a>
     </nav>
@@ -8,9 +8,9 @@
       <span>{{ auth.usuario()?.nombre }}</span>
       <button class="btn secundario" type="button" (click)="auth.cerrarSesion()">Cerrar sesión</button>
     </div>
-  }
-</header>
+  </header>
+}
 
-<main class="contenedor">
+<main [class.contenedor]="auth.autenticado()">
   <router-outlet />
 </main>

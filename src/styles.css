@@ -1,14 +1,23 @@
+/* ===== Tokens de diseño: aquí se cambia la identidad visual de toda la app ===== */
 :root {
-  --fondo: #0b1220;
-  --tarjeta: #111b2e;
-  --borde: #22304d;
-  --texto: #e5ecf7;
-  --suave: #93a4c3;
-  --acento: #3b82f6;
+  --fondo: #141720;
+  --fondo-profundo: #0e1017;
+  --tarjeta: #202731;
+  --tarjeta-2: #1a1f2b;
+  --borde: #353a58;
+  --marco: #3b4578;
+  --texto: #e6ecfa;
+  --titulo: #dae3ff;
+  --suave: #abb3c0;
+  --acento: #5b6cf8;
+  --acento-claro: #8e99f5;
   --verde: #22c55e;
   --ambar: #f59e0b;
   --rojo: #ef4444;
   --naranja: #f97316;
+  --radio: 20px;
+  --fuente: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --fuente-titulo: 'Fraunces', Georgia, 'Times New Roman', serif;
   color-scheme: dark;
 }
 
@@ -18,51 +27,54 @@ body {
   margin: 0;
   background: var(--fondo);
   color: var(--texto);
-  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--fuente);
   line-height: 1.5;
 }
 
-h1 { font-size: 1.7rem; margin: 0 0 .25rem; }
-h2 { font-size: 1.15rem; margin: 0 0 .75rem; }
-a { color: var(--acento); }
+h1, h2, h3 { font-family: var(--fuente-titulo); color: var(--titulo); font-weight: 600; }
+h1 { font-size: 2rem; margin: 0 0 .25rem; }
+h2 { font-size: 1.25rem; margin: 0 0 .75rem; }
+a { color: var(--acento-claro); }
 .sub { color: var(--suave); margin: 0 0 1rem; }
 
+/* ===== Barra superior (sesión iniciada) ===== */
 .barra {
   display: flex; align-items: center; gap: 1.5rem;
   padding: .75rem 1.5rem;
-  background: var(--tarjeta);
+  background: var(--fondo-profundo);
   border-bottom: 1px solid var(--borde);
 }
-.barra .logo { font-weight: 700; font-size: 1.1rem; color: var(--texto); text-decoration: none; }
+.barra .logo { font-family: var(--fuente-titulo); font-weight: 600; font-size: 1.15rem; color: var(--titulo); text-decoration: none; }
 .barra nav { flex: 1; }
 .barra nav a { color: var(--suave); text-decoration: none; padding: .25rem .5rem; }
-.barra nav a.activo { color: var(--texto); }
+.barra nav a.activo { color: var(--acento-claro); border-bottom: 2px solid var(--acento); }
 .barra .usuario { display: flex; align-items: center; gap: .75rem; margin-left: auto; color: var(--suave); }
 
-.contenedor { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+.contenedor { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
 
+/* ===== Tarjetas, botones, campos ===== */
 .tarjeta {
   background: var(--tarjeta);
   border: 1px solid var(--borde);
-  border-radius: 12px;
+  border-radius: var(--radio);
   padding: 1.25rem;
   margin-bottom: 1rem;
 }
-.tarjeta.auth { max-width: 420px; margin: 2rem auto; }
+.tarjeta.auth { max-width: 440px; margin: 2rem auto; }
 .tarjeta.auth form { display: flex; flex-direction: column; gap: .9rem; }
 
 label { display: flex; flex-direction: column; gap: .3rem; font-size: .9rem; color: var(--suave); }
 input {
   background: var(--fondo); color: var(--texto);
-  border: 1px solid var(--borde); border-radius: 8px;
+  border: 1px solid var(--borde); border-radius: 12px;
   padding: .6rem .75rem; font: inherit;
 }
 input:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
 
 .btn {
   display: inline-block; cursor: pointer; text-decoration: none; text-align: center;
-  background: var(--acento); color: #fff; border: 0; border-radius: 8px;
-  padding: .6rem 1rem; font: inherit; font-weight: 600;
+  background: var(--acento); color: #fff; border: 0; border-radius: 999px;
+  padding: .6rem 1.1rem; font: inherit; font-weight: 600;
 }
 .btn:hover:not(:disabled) { filter: brightness(1.1); }
 .btn:disabled { opacity: .55; cursor: not-allowed; }
@@ -79,6 +91,7 @@ input:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
 .requisitos { list-style: none; padding: 0; margin: 0; font-size: .85rem; color: var(--suave); }
 .requisitos li.cumple { color: var(--verde); }
 
+/* ===== Tablas y etiquetas de estado ===== */
 .tabla-scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: .6rem .5rem; border-bottom: 1px solid var(--borde); }
@@ -90,10 +103,11 @@ td.acciones { display: flex; gap: .5rem; justify-content: flex-end; }
   font-size: .8rem; font-weight: 600; background: var(--borde); color: var(--texto);
 }
 .badge.grande { font-size: 1rem; padding: .25rem .9rem; margin-bottom: .5rem; }
-[data-nivel='bueno'].badge { background: rgba(34,197,94,.18); color: var(--verde); }
-[data-nivel='mejoras'].badge { background: rgba(245,158,11,.18); color: var(--ambar); }
-[data-nivel='critico'].badge { background: rgba(239,68,68,.18); color: var(--rojo); }
+[data-nivel='bueno'].badge { background: rgba(34,197,94,.16); color: var(--verde); }
+[data-nivel='mejoras'].badge { background: rgba(245,158,11,.16); color: var(--ambar); }
+[data-nivel='critico'].badge { background: rgba(239,68,68,.16); color: var(--rojo); }
 
+/* ===== Medidor, hallazgos y datos ===== */
 .resumen { display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; }
 .gauge {
   --color: var(--suave);
@@ -105,9 +119,7 @@ td.acciones { display: flex; gap: .5rem; justify-content: flex-end; }
 .gauge[data-nivel='bueno'] { --color: var(--verde); }
 .gauge[data-nivel='mejoras'] { --color: var(--ambar); }
 .gauge[data-nivel='critico'] { --color: var(--rojo); }
-.gauge::before {
-  content: ''; position: absolute; inset: 12px; border-radius: 50%; background: var(--tarjeta);
-}
+.gauge::before { content: ''; position: absolute; inset: 12px; border-radius: 50%; background: var(--tarjeta); }
 .gauge span { position: relative; font-size: 2.2rem; font-weight: 700; }
 
 .hallazgo { padding: .75rem 0; border-top: 1px solid var(--borde); }
@@ -121,7 +133,7 @@ td.acciones { display: flex; gap: .5rem; justify-content: flex-end; }
 .sev[data-sev='alta'] { background: var(--naranja); color: #fff; }
 .sev[data-sev='media'] { background: var(--ambar); color: #111; }
 .sev[data-sev='baja'] { background: var(--acento); color: #fff; }
-.sev[data-sev='info'] { background: rgba(34,197,94,.18); color: var(--verde); }
+.sev[data-sev='info'] { background: rgba(34,197,94,.16); color: var(--verde); }
 
 .datos { display: grid; grid-template-columns: max-content 1fr; gap: .4rem 1.25rem; margin: 0; }
 .datos dt { color: var(--suave); }
