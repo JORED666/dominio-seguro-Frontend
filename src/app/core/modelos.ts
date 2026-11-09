@@ -48,6 +48,8 @@ export interface Certificado {
 export interface ResultadoAnalisis extends Analisis {
   certificado: Certificado | null;
   subdominios: string[];
+  reputacion?: { riesgo: number; nivel: string; asn: string | null } | null;
+  exposicion?: { puertos: number[]; vulnerabilidades: string[] } | null;
 }
 
 // Extrae el mensaje de error que devuelve la API ({ "error": "..." })
