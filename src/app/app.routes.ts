@@ -23,5 +23,20 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/resultado/resultado').then((m) => m.Resultado),
   },
+  {
+    path: 'historial',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/historial/historial').then((m) => m.Historial),
+  },
+  {
+    path: 'historial',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/historial/historial').then((m) => m.Historial),
+  },
+  {
+    path: 'alertas',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/alertas/alertas').then((m) => m.Alertas),
+  },
   { path: '**', redirectTo: '' },
 ];
