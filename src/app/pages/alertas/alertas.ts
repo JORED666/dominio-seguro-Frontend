@@ -1,159 +1,15 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
-import { DominiosService } from '../../core/dominios.service';
-import { Analisis, Dominio, Hallazgo, Severidad, mensajeError } from '../../core/modelos';
+import { mensajeError } from '../../core/modelos';
+import { DominiosStore } from '../../data/dominios.store';
+import { Alerta, construirAlertas } from '../../domain/alertas';
+import { ETIQUETA_SEVERIDAD, ORDEN_SEVERIDAD, Sev, esGrave } from '../../domain/severidad';
+import { crearAnimacion } from '../../shared/utils/animacion';
+import { hace } from '../../shared/utils/fechas';
+import { guardarLista, leerLista } from '../../shared/utils/almacen';
 
-type Sev = Severidad | 'ok';
-type Tipo = 'hallazgo' | 'caida' | 'mejora' | 'resuelto' | 'inactivo' | 'sin-analisis';
 type Filtro = 'todas' | 'graves' | 'nuevas' | 'buenas';
-
-interface Alerta {
-  id: string;
-  tipo: Tipo;
-  sev: Sev;
-  dominioId: string;
-  dominio: string;
-  enlace: string[];
-  titulo: string;
-  detalle: string;
-  recomendacion: string;
-  categoria: string;
-  desde: number; // desde cuándo se conoce (ms)
-  nueva: boolean; // apareció en el análisis más reciente
-}
-
-const ORDEN: Record<Sev, number> = { critica: 0, alta: 1, media: 2, baja: 3, info: 4, ok: 5 };
-const ETIQUETA: Record<Sev, string> = { critica: 'Crítica', alta: 'Alta', media: 'Media', baja: 'Baja', info: 'Info', ok: 'Buena noticia' };
-const DIA = 864e5;
 const CLAVE_DESCARTADAS = 'ds-alertas-descartadas';
-const DIAS_SIN_ANALISIS = 7;
-const CAMBIO_RELEVANTE = 10;
-
-const relevantes = (a: Analisis): Hallazgo[] => (a.hallazgos ?? []).filter((x) => x.severidad !== 'info');
-const clave = (x: Hallazgo) => x.categoria + '|' + x.titulo;
-
-function leerDescartadas(): string[] {
-  try {
-    const v = JSON.parse(localStorage.getItem(CLAVE_DESCARTADAS) ?? '[]');
-    return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [];
-  } catch {
-    return [];
-  }
-}
-
-// Convierte el historial de un dominio en las alertas que merece
-function construir(d: Dominio, h: Analisis[]): Alerta[] {
-  const base = { dominioId: d.id, dominio: d.nombreDominio, enlace: ['/dominios', d.id] };
-  if (!h.length) {
-    return [
-      {
-        ...base,
-        enlace: ['/dominios'],
-        id: `${d.id}|sin-analisis`,
-        tipo: 'sin-analisis',
-        sev: 'baja',
-        titulo: 'Todavía no analizas este dominio',
-        detalle: 'Sin un primer análisis no sabemos si su certificado, su reputación o sus puertos tienen problemas.',
-        recomendacion: 'En Mis dominios pulsa «Primer análisis» en este dominio.',
-        categoria: 'Pendiente',
-        desde: new Date(d.creadoEn).getTime(),
-        nueva: false,
-      },
-    ];
-  }
-
-  const out: Alerta[] = [];
-  const ult = h[0];
-  const prev = h[1];
-  const fUlt = new Date(ult.fecha).getTime();
-  const clavesPrev = new Set(prev ? relevantes(prev).map(clave) : []);
-  const clavesUlt = new Set(relevantes(ult).map(clave));
-
-  // Un hallazgo es una alerta mientras siga apareciendo; "desde" es la primera vez de la racha actual
-  for (const x of relevantes(ult)) {
-    let desde = fUlt;
-    for (let j = 1; j < h.length; j++) {
-      if (relevantes(h[j]).some((y) => clave(y) === clave(x))) desde = new Date(h[j].fecha).getTime();
-      else break;
-    }
-    out.push({
-      ...base,
-      id: `${d.id}|h|${clave(x)}`,
-      tipo: 'hallazgo',
-      sev: x.severidad,
-      titulo: x.titulo,
-      detalle: x.descripcion,
-      recomendacion: x.recomendacion,
-      categoria: x.categoria,
-      desde,
-      nueva: !!prev && !clavesPrev.has(clave(x)),
-    });
-  }
-
-  if (prev) {
-    const delta = ult.puntaje - prev.puntaje;
-    if (delta <= -CAMBIO_RELEVANTE) {
-      out.push({
-        ...base,
-        id: `${d.id}|caida|${ult.id}`,
-        tipo: 'caida',
-        sev: delta <= -25 ? 'critica' : 'alta',
-        titulo: `El puntaje bajó ${-delta} puntos`,
-        detalle: `Pasó de ${prev.puntaje} a ${ult.puntaje} desde el análisis anterior.`,
-        recomendacion: 'Revisa los hallazgos nuevos de este dominio: algo cambió en su configuración.',
-        categoria: 'Tendencia',
-        desde: fUlt,
-        nueva: true,
-      });
-    } else if (delta >= CAMBIO_RELEVANTE) {
-      out.push({
-        ...base,
-        id: `${d.id}|mejora|${ult.id}`,
-        tipo: 'mejora',
-        sev: 'ok',
-        titulo: `El puntaje subió ${delta} puntos`,
-        detalle: `Pasó de ${prev.puntaje} a ${ult.puntaje} desde el análisis anterior.`,
-        recomendacion: '',
-        categoria: 'Tendencia',
-        desde: fUlt,
-        nueva: true,
-      });
-    }
-    for (const x of relevantes(prev)) {
-      if (clavesUlt.has(clave(x))) continue;
-      out.push({
-        ...base,
-        id: `${d.id}|resuelto|${clave(x)}|${ult.id}`,
-        tipo: 'resuelto',
-        sev: 'ok',
-        titulo: `Resuelto: ${x.titulo}`,
-        detalle: 'Ya no aparece en el análisis más reciente.',
-        recomendacion: '',
-        categoria: x.categoria,
-        desde: fUlt,
-        nueva: true,
-      });
-    }
-  }
-
-  const dias = (Date.now() - fUlt) / DIA;
-  if (dias > DIAS_SIN_ANALISIS) {
-    out.push({
-      ...base,
-      id: `${d.id}|inactivo`,
-      tipo: 'inactivo',
-      sev: 'media',
-      titulo: `Hace ${Math.floor(dias)} días que no analizas este dominio`,
-      detalle: 'Un certificado puede vencer o un puerto puede abrirse en cualquier momento.',
-      recomendacion: 'Vuelve a analizarlo para confirmar que sigue en buen estado.',
-      categoria: 'Mantenimiento',
-      desde: fUlt,
-      nueva: false,
-    });
-  }
-  return out;
-}
 
 @Component({
   selector: 'app-alertas',
@@ -383,10 +239,9 @@ function construir(d: Dominio, h: Analisis[]): Alerta[] {
   `,
 })
 export class Alertas {
-  private servicio = inject(DominiosService);
-  private destruir = inject(DestroyRef);
+  private store = inject(DominiosStore);
 
-  etiqueta = ETIQUETA;
+  etiqueta = ETIQUETA_SEVERIDAD;
   filtros: { valor: Filtro; texto: string }[] = [
     { valor: 'todas', texto: 'Todas' },
     { valor: 'graves', texto: 'Graves' },
@@ -401,13 +256,12 @@ export class Alertas {
 
   filtro = signal<Filtro>('todas');
   dominioSel = signal('');
-  descartadas = signal<string[]>(leerDescartadas());
+  descartadas = signal<string[]>(leerLista(CLAVE_DESCARTADAS));
   verDescartadas = signal(false);
 
-  // Progreso (0 a 1) de la animación de los números
-  k = signal(0);
-  private raf = 0;
-  private reducir = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Animación de entrada de los números
+  private anim = crearAnimacion(900);
+  k = this.anim.k;
 
   // Alertas del dominio elegido, separando activas y descartadas
   private delDominio = computed(() => {
@@ -426,14 +280,14 @@ export class Alertas {
     const activas = l.filter((a) => a.sev !== 'ok');
     return {
       activas: activas.length,
-      graves: activas.filter((a) => a.sev === 'critica' || a.sev === 'alta').length,
+      graves: activas.filter((a) => esGrave(a.sev)).length,
       nuevas: activas.filter((a) => a.nueva).length,
       buenas: l.filter((a) => a.sev === 'ok').length,
     };
   });
 
   private coincide(a: Alerta, f: Filtro): boolean {
-    return f === 'todas' || (f === 'graves' && (a.sev === 'critica' || a.sev === 'alta')) || (f === 'nuevas' && a.nueva && a.sev !== 'ok') || (f === 'buenas' && a.sev === 'ok');
+    return f === 'todas' || (f === 'graves' && (esGrave(a.sev))) || (f === 'nuevas' && a.nueva && a.sev !== 'ok') || (f === 'buenas' && a.sev === 'ok');
   }
 
   cuentaFiltro(f: Filtro): number {
@@ -444,7 +298,7 @@ export class Alertas {
     const f = this.filtro();
     const lista = this.visibles()
       .filter((a) => this.coincide(a, f))
-      .sort((a, b) => ORDEN[a.sev] - ORDEN[b.sev] || b.desde - a.desde);
+      .sort((a, b) => ORDEN_SEVERIDAD[a.sev] - ORDEN_SEVERIDAD[b.sev] || b.desde - a.desde);
     const defs: { titulo: string; descripcion: string; sevs: Sev[] }[] = [
       { titulo: 'Requieren acción', descripcion: 'Problemas graves que conviene resolver cuanto antes.', sevs: ['critica', 'alta'] },
       { titulo: 'Conviene revisar', descripcion: 'No son urgentes, pero reducen tu puntaje.', sevs: ['media', 'baja'] },
@@ -456,18 +310,15 @@ export class Alertas {
   });
 
   constructor() {
-    this.destruir.onDestroy(() => cancelAnimationFrame(this.raf));
     this.cargar();
   }
 
   n(v: number): number {
-    return Math.round(v * this.k());
+    return this.anim.n(v);
   }
 
   cuando(a: Alerta): string {
-    const s = Math.max(0, (Date.now() - a.desde) / 1000);
-    const rtf = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
-    const t = s < 3600 ? rtf.format(-Math.max(1, Math.round(s / 60)), 'minute') : s < 86400 ? rtf.format(-Math.round(s / 3600), 'hour') : rtf.format(-Math.round(s / 86400), 'day');
+    const t = hace(a.desde);
     return a.tipo === 'hallazgo' ? `Activa desde ${t}` : a.tipo === 'sin-analisis' ? `Agregado ${t}` : `Detectada ${t}`;
   }
 
@@ -483,46 +334,23 @@ export class Alertas {
 
   private guardar(lista: string[]) {
     this.descartadas.set(lista);
-    try {
-      localStorage.setItem(CLAVE_DESCARTADAS, JSON.stringify(lista));
-    } catch {
-      /* sin almacenamiento: se descarta solo mientras la página siga abierta */
-    }
-  }
-
-  private animarEntrada() {
-    cancelAnimationFrame(this.raf);
-    if (this.reducir) {
-      this.k.set(1);
-      return;
-    }
-    const t0 = performance.now();
-    const paso = (t: number) => {
-      const x = Math.min(1, (t - t0) / 900);
-      this.k.set(1 - Math.pow(1 - x, 3));
-      if (x < 1) this.raf = requestAnimationFrame(paso);
-    };
-    this.raf = requestAnimationFrame(paso);
+    guardarLista(CLAVE_DESCARTADAS, lista);
   }
 
   private cargar() {
-    this.servicio.listar().subscribe({
+    this.store.cargarLista().subscribe({
       next: (lista) => {
         this.leyenda.set(lista.map((d) => ({ id: d.id, nombre: d.nombreDominio })));
-        const con = lista.filter((d) => d.nivel);
-        const sin = lista.filter((d) => !d.nivel);
-        const terminar = (res: Analisis[][]) => {
-          const todas: Alerta[] = [];
-          con.forEach((d, i) => {
-            if (res[i].length) todas.push(...construir(d, res[i]));
+        this.store.cargarHistoriales(lista).subscribe(() => {
+          const todas = lista.flatMap((d) => {
+            const h = this.store.historialDe(d.id);
+            // Con nivel pero sin historial: la API falló para ese dominio, no se inventan alertas
+            return d.nivel && !h.length ? [] : construirAlertas(d, h);
           });
-          sin.forEach((d) => todas.push(...construir(d, [])));
           this.alertas.set(todas);
           this.cargando.set(false);
-          this.animarEntrada();
-        };
-        if (!con.length) return terminar([]);
-        forkJoin(con.map((d) => this.servicio.historial(d.id).pipe(catchError(() => of([] as Analisis[]))))).subscribe(terminar);
+          this.anim.iniciar();
+        });
       },
       error: (e) => {
         this.error.set(mensajeError(e));

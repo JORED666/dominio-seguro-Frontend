@@ -1,9 +1,8 @@
 import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
-import { DominiosService } from '../../core/dominios.service';
-import { Analisis, Dominio, ETIQUETA_NIVEL, Hallazgo, Severidad, mensajeError } from '../../core/modelos';
+import { ETIQUETA_NIVEL, Hallazgo, Severidad, mensajeError } from '../../core/modelos';
+import { DominiosStore } from '../../data/dominios.store';
 import { ETIQUETA_SEVERIDAD, ORDEN_SEVERIDAD } from '../../domain/severidad';
 import { crearAnimacion } from '../../shared/utils/animacion';
 
@@ -524,8 +523,7 @@ interface Grupo {
 })
 export class Resultado {
   private ruta = inject(ActivatedRoute);
-  private servicio = inject(DominiosService);
-  private destruir = inject(DestroyRef);
+  private store = inject(DominiosStore);
 
   etiqueta = ETIQUETA_NIVEL;
   sev = ETIQUETA_SEVERIDAD;
@@ -538,8 +536,8 @@ export class Resultado {
     { valor: 'info', texto: 'Informativos' },
   ];
 
-  dominio = signal<Dominio | null>(null);
-  historial = signal<Analisis[]>([]);
+  dominio = computed(() => this.store.dominios().find((d) => d.id === this.id) ?? null);
+  historial = computed(() => this.store.historialDe(this.id));
   cargando = signal(true);
   analizando = signal(false);
   error = signal('');
@@ -608,7 +606,7 @@ export class Resultado {
 
   // Certificado, red y subdominios solo existen si el análisis se acaba de ejecutar
   detalle = computed(() => {
-    const r = this.servicio.ultimoResultado();
+    const r = this.store.ultimoResultado();
     return r && r.dominioId === this.id ? r : null;
   });
 
@@ -654,10 +652,8 @@ export class Resultado {
   }
 
   cargar() {
-    forkJoin({ lista: this.servicio.listar(), hist: this.servicio.historial(this.id) }).subscribe({
-      next: ({ lista, hist }) => {
-        this.dominio.set(lista.find((d) => d.id === this.id) ?? null);
-        this.historial.set(hist);
+    this.store.cargarDominio(this.id).subscribe({
+      next: () => {
         this.cargando.set(false);
         this.animarEntrada();
       },
@@ -671,7 +667,7 @@ export class Resultado {
   reanalizar() {
     this.analizando.set(true);
     this.error.set('');
-    this.servicio.analizar(this.id).subscribe({
+    this.store.analizar(this.id).subscribe({
       next: () => {
         this.analizando.set(false);
         this.cargar();

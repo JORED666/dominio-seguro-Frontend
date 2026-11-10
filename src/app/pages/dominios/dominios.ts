@@ -1,9 +1,11 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
-import { DominiosService } from '../../core/dominios.service';
-import { Analisis, Dominio, ETIQUETA_NIVEL, Hallazgo, Nivel, Severidad, mensajeError } from '../../core/modelos';
+import { Analisis, Dominio, ETIQUETA_NIVEL, Hallazgo, Nivel, mensajeError } from '../../core/modelos';
+import { DominiosStore } from '../../data/dominios.store';
+import { ETIQUETA_SEVERIDAD, ORDEN_SEVERIDAD } from '../../domain/severidad';
+import { crearAnimacion } from '../../shared/utils/animacion';
+import { fechaCorta, hace } from '../../shared/utils/fechas';
 
 type Filtro = 'todos' | Nivel | 'sin';
 
@@ -19,7 +21,6 @@ interface Info {
   yUlt: number; // posición vertical (%) del último punto
 }
 
-const ORDEN: Record<Severidad, number> = { critica: 0, alta: 1, media: 2, baja: 3, info: 4 };
 
 // Medidas de la mini gráfica (viewBox)
 const GW = 160;
@@ -396,9 +397,8 @@ const GP = 4;
   `,
 })
 export class Dominios {
-  private servicio = inject(DominiosService);
+  private store = inject(DominiosStore);
   private router = inject(Router);
-  private destruir = inject(DestroyRef);
 
   etiqueta = ETIQUETA_NIVEL;
   etiqSev = ETIQUETA_SEVERIDAD;
@@ -410,7 +410,7 @@ export class Dominios {
     { valor: 'sin', texto: 'Sin analizar' },
   ];
 
-  dominios = signal<Dominio[]>([]);
+  dominios = this.store.dominios;
   info = signal<Record<string, Info>>({});
   extrasListos = signal(false);
   cargando = signal(true);
@@ -501,15 +501,11 @@ export class Dominios {
   }
 
   private cargarExtras(lista: Dominio[]) {
-    const con = lista.filter((d) => d.nivel);
-    if (!con.length) {
-      this.extrasListos.set(true);
-      return;
-    }
-    forkJoin(con.map((d) => this.servicio.historial(d.id).pipe(catchError(() => of([] as Analisis[]))))).subscribe((res) => {
+    this.store.cargarHistoriales(lista).subscribe(() => {
       const mapa: Record<string, Info> = {};
-      con.forEach((d, i) => {
-        if (res[i].length) mapa[d.id] = this.armarInfo(res[i]);
+      lista.forEach((d) => {
+        const h = this.store.historialDe(d.id);
+        if (h.length) mapa[d.id] = this.armarInfo(h);
       });
       this.info.set(mapa);
       this.extrasListos.set(true);
@@ -517,9 +513,8 @@ export class Dominios {
   }
 
   cargar() {
-    this.servicio.listar().subscribe({
+    this.store.cargarLista().subscribe({
       next: (lista) => {
-        this.dominios.set(lista);
         this.cargando.set(false);
         this.animarEntrada();
         this.cargarExtras(lista);
@@ -536,7 +531,7 @@ export class Dominios {
     if (!nombre) return;
     this.agregando.set(true);
     this.error.set('');
-    this.servicio.crear(nombre).subscribe({
+    this.store.crear(nombre).subscribe({
       next: () => {
         this.nuevo = '';
         this.agregando.set(false);
@@ -553,7 +548,7 @@ export class Dominios {
   analizar(d: Dominio) {
     this.analizando.set(d.id);
     this.error.set('');
-    this.servicio.analizar(d.id).subscribe({
+    this.store.analizar(d.id).subscribe({
       next: () => {
         this.analizando.set(null);
         this.router.navigate(['/dominios', d.id]);
