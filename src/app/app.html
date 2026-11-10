@@ -1,16 +1,70 @@
-<header class="barra">
-  <a class="logo" routerLink="/dominios">Dominio Seguro</a>
-  @if (auth.autenticado()) {
-    <nav>
-      <a routerLink="/dominios" routerLinkActive="activo">Mis dominios</a>
-    </nav>
-    <div class="usuario">
-      <span>{{ auth.usuario()?.nombre }}</span>
-      <button class="btn secundario" type="button" (click)="auth.cerrarSesion()">Cerrar sesión</button>
-    </div>
-  }
-</header>
+@if (auth.autenticado()) {
+  <header class="barra">
+    <a class="logo" routerLink="/dominios">
+      <span class="logo-icono"><app-marca [tam]="26" [mini]="true" /></span>
+      Dominio Seguro
+    </a>
 
-<main class="contenedor">
+    <nav>
+      <a routerLink="/dominios" routerLinkActive="activo">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" />
+        </svg>
+        Mis dominios
+      </a>
+      <span class="nav-off" title="Próximamente">Historial</span>
+      <span class="nav-off" title="Próximamente">Dominios similares</span>
+      <span class="nav-off" title="Próximamente">Alertas</span>
+    </nav>
+
+    <div class="usuario">
+      <button class="icono-btn" type="button" disabled title="Alertas: próximamente" aria-label="Alertas (próximamente)">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 9a6 6 0 1112 0c0 6 2 7 2 7H4s2-1 2-7" /><path d="M10 20a2 2 0 004 0" />
+        </svg>
+      </button>
+
+      <div class="menu-usuario">
+        <button
+          class="usuario-pill"
+          type="button"
+          (click)="alternarMenu($event)"
+          [attr.aria-expanded]="menuAbierto()"
+          aria-haspopup="menu"
+        >
+          <span class="avatar">{{ auth.usuario()?.nombre?.charAt(0) }}</span>
+          <span class="nombre-usuario">{{ auth.usuario()?.nombre }}</span>
+          <svg class="chevron" [class.abierto]="menuAbierto()" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+
+        @if (menuAbierto()) {
+          <div class="menu-panel" role="menu">
+            <div class="menu-datos">
+              <strong>{{ auth.usuario()?.nombre }}</strong>
+              <span>{{ auth.usuario()?.correo }}</span>
+            </div>
+            <button class="menu-item" type="button" role="menuitem" (click)="auth.cerrarSesion()">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9" />
+              </svg>
+              Cerrar sesión
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </header>
+}
+
+<main [class.contenedor]="auth.autenticado()">
   <router-outlet />
 </main>
+
+@if (auth.autenticado()) {
+  <footer class="pie-app">
+    <strong>Dominio Seguro</strong>
+    <span>© 2026 Dominio Seguro. Cuidado digital para pequeños negocios.</span>
+  </footer>
+}
