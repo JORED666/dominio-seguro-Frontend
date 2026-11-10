@@ -1,0 +1,256 @@
+<a class="volver-link" routerLink="/dominios">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+  Volver a mis dominios
+</a>
+
+@if (cargando()) {
+  <p class="sub">Cargando…</p>
+} @else if (!ultimo()) {
+  <header class="cab">
+    <div>
+      <h1>{{ dominio()?.nombreDominio }}</h1>
+      <p class="sub">Este dominio todavía no tiene análisis.</p>
+    </div>
+    <button class="btn-prim" type="button" [disabled]="analizando()" (click)="reanalizar()">
+      {{ analizando() ? 'Analizando… (hasta 30 s)' : 'Primer análisis' }}
+    </button>
+  </header>
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+} @else {
+  <header class="cab">
+    <div>
+      <p class="etiqueta">ANÁLISIS DE SEGURIDAD</p>
+      <h1>{{ dominio()?.nombreDominio }}</h1>
+      <p class="sub meta">
+        <span>{{ ultimo()!.fecha | date: 'dd/MM/yyyy HH:mm' }}</span>
+        <span class="punto"></span>
+        <span>Duración {{ (ultimo()!.duracionMs / 1000).toFixed(1) }} s</span>
+        <span class="punto"></span>
+        <span>{{ historial().length }} {{ historial().length === 1 ? 'análisis' : 'análisis en total' }}</span>
+      </p>
+    </div>
+    <button class="btn-prim" type="button" [disabled]="analizando()" (click)="reanalizar()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+      {{ analizando() ? 'Analizando… (hasta 30 s)' : 'Analizar de nuevo' }}
+    </button>
+  </header>
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  <!-- RESUMEN -->
+  <section class="panel resumen ent" style="--i: 0" [attr.data-nivel]="ultimo()!.nivel">
+    <app-aro-puntaje [puntaje]="ultimo()!.puntaje" [nivel]="ultimo()!.nivel" [progreso]="k()" texto="DE 100" [tam]="148" hueco="var(--tarjeta-2)" />
+
+    <div class="res-centro">
+      <div class="fila-chip">
+        <span class="chip-nivel" [attr.data-nivel]="ultimo()!.nivel">{{ etiqueta[ultimo()!.nivel] }}</span>
+        @if (delta() !== null) {
+          <span class="delta" [attr.data-dir]="delta()! > 0 ? 'sube' : delta()! < 0 ? 'baja' : 'igual'">
+            {{ delta()! > 0 ? '▲ +' + delta() : delta()! < 0 ? '▼ −' + -delta()! : '＝ Sin cambios' }}
+          </span>
+          <span class="vs">vs. el análisis anterior</span>
+        }
+      </div>
+      <p class="res-texto">{{ mensaje[ultimo()!.nivel] }}</p>
+      <div class="escala" aria-hidden="true"><span class="marca" [style.left.%]="ultimo()!.puntaje * k()"></span></div>
+      <div class="escala-leyenda" aria-hidden="true"><span>Crítico</span><span>Mejoras</span><span>Bueno</span></div>
+    </div>
+
+    <div class="res-conteo">
+      <div class="tile"><strong class="n-grave">{{ graves() }}</strong><span>Graves</span></div>
+      <div class="tile"><strong class="n-prob">{{ conteo().problemas }}</strong><span>Por corregir</span></div>
+      <div class="tile"><strong class="n-ok">{{ conteo().info }}</strong><span>Informativos</span></div>
+    </div>
+
+    <div class="paso" [attr.data-ok]="!primerPaso()">
+      <span class="paso-etq">{{ primerPaso() ? 'Primer paso recomendado' : 'Todo en orden' }}</span>
+      <p>
+        @if (primerPaso(); as p) {
+          <strong>{{ p.titulo }}.</strong> {{ p.recomendacion }}
+        } @else {
+          No hay nada urgente. Vuelve a analizar el dominio en unos días para mantener el puntaje.
+        }
+      </p>
+    </div>
+  </section>
+
+  <div class="rejilla">
+    <!-- HALLAZGOS -->
+    <div class="principal">
+      <div class="barra-sec ent" style="--i: 1">
+        <h2 class="titulo-seccion">Hallazgos por categoría</h2>
+        <div class="chips" role="group" aria-label="Filtrar hallazgos">
+          @for (f of filtros; track f.valor) {
+            <button type="button" class="chip" [class.activo]="filtro() === f.valor" (click)="filtro.set(f.valor)">
+              {{ f.texto }} ({{ cuentaFiltro(f.valor) }})
+            </button>
+          }
+        </div>
+      </div>
+
+      @for (g of grupos(); track g.categoria; let i = $index) {
+        <section class="panel grupo ent" [style.--i]="i + 2">
+          <header class="grupo-cab">
+            <span class="grupo-icono" [attr.data-sev]="g.peor">
+              @switch (g.categoria) {
+                @case ('TLS') {
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3"/></svg>
+                }
+                @case ('Reputación') {
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+                }
+                @case ('Exposición') {
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></svg>
+                }
+                @default {
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+                }
+              }
+            </span>
+            <h3>{{ g.categoria }}</h3>
+            <span class="grupo-estado" [attr.data-sev]="g.peor">
+              {{ g.problemas > 0 ? g.problemas + ' por corregir' : 'Sin problemas' }}
+            </span>
+          </header>
+
+          @for (h of g.items; track h.id) {
+            @if (h.severidad === 'info') {
+              <details class="info-fila">
+                <summary><span class="ok-marca">✓</span>{{ h.titulo }}</summary>
+                <p>{{ h.descripcion }}</p>
+              </details>
+            } @else {
+              <article class="hallazgo" [attr.data-sev]="h.severidad">
+                <div class="h-cab">
+                  <span class="sev" [attr.data-sev]="h.severidad">{{ sev[h.severidad] }}</span>
+                  <strong>{{ h.titulo }}</strong>
+                </div>
+                <p class="h-desc">{{ h.descripcion }}</p>
+                <p class="h-reco"><span>Qué hacer</span>{{ h.recomendacion }}</p>
+              </article>
+            }
+          }
+        </section>
+      } @empty {
+        <section class="panel vacio">
+          <p class="sub" style="margin:0">No hay hallazgos en esta categoría de filtro.</p>
+        </section>
+      }
+    </div>
+
+    <!-- LATERAL -->
+    <aside class="lateral">
+      @if (detalle(); as det) {
+        @if (det.certificado; as c) {
+          <section class="panel ent" style="--i: 2">
+            <h3 class="lat-titulo">Certificado TLS</h3>
+            <div class="cert-estado" [attr.data-tono]="tonoDias(c.diasRestantes, c.autorizado)">
+              <strong>{{ textoDias(c.diasRestantes) }}</strong>
+              <span>{{ c.autorizado ? 'Certificado confiable' : 'El navegador no lo considera confiable' }}</span>
+            </div>
+            <dl class="datos">
+              <dt>Emisor</dt><dd>{{ c.emisor }}</dd>
+              <dt>Protocolo</dt><dd>{{ c.protocolo }}</dd>
+              <dt>Vence</dt><dd>{{ c.venceEn | date: 'dd/MM/yyyy' }}</dd>
+            </dl>
+          </section>
+        }
+        @if (det.reputacion || det.exposicion) {
+          <section class="panel ent" style="--i: 3">
+            <h3 class="lat-titulo">Red e infraestructura</h3>
+            <dl class="datos">
+              @if (det.reputacion; as r) {
+                <dt>Proveedor</dt><dd>{{ r.asn || 'Desconocido' }}</dd>
+                <dt>Riesgo de IP</dt>
+                <dd>
+                  <span class="riesgo">
+                    <span class="riesgo-barra"><i [style.width.%]="r.riesgo * k()" [attr.data-tono]="tonoRiesgo(r.riesgo)"></i></span>
+                    <b>{{ r.riesgo }}</b><small>/ 100</small>
+                  </span>
+                </dd>
+              }
+            </dl>
+            @if (det.exposicion; as e) {
+              <h4 class="sub-titulo">Puertos abiertos</h4>
+              @if (e.puertos.length) {
+                <div class="puertos">
+                  @for (p of e.puertos; track p) {
+                    <span class="puerto" [class.riesgo-p]="esSensible(p)" [title]="esSensible(p) ? 'Normalmente no debería estar abierto a Internet' : ''">
+                      {{ p }}@if (nombrePuerto(p); as np) { <small>{{ np }}</small> }
+                    </span>
+                  }
+                </div>
+              } @else {
+                <p class="sub nada">Ninguno visible desde Internet.</p>
+              }
+              <h4 class="sub-titulo">Vulnerabilidades conocidas <span class="cuenta" [attr.data-cero]="e.vulnerabilidades.length === 0">{{ e.vulnerabilidades.length }}</span></h4>
+              @if (e.vulnerabilidades.length) {
+                <div class="cves">
+                  @for (v of e.vulnerabilidades.slice(0, 4); track v) {
+                    <a class="cve" [href]="'https://nvd.nist.gov/vuln/detail/' + v" target="_blank" rel="noopener noreferrer">{{ v }}</a>
+                  }
+                  @if (e.vulnerabilidades.length > 4) {
+                    <span class="mas">+{{ e.vulnerabilidades.length - 4 }} más</span>
+                  }
+                </div>
+              } @else {
+                <p class="sub nada">Ninguna asociada a la IP.</p>
+              }
+            }
+          </section>
+        }
+        <section class="panel ent" style="--i: 4">
+          <div class="lat-cab">
+            <h3 class="lat-titulo">Subdominios</h3>
+            <span class="cuenta" [attr.data-cero]="det.subdominios.length === 0">{{ det.subdominios.length }}</span>
+          </div>
+          @if (det.subdominios.length === 0) {
+            <p class="sub nada">No se encontraron subdominios públicos.</p>
+          } @else {
+            <ul class="lista-sub">
+              @for (s of det.subdominios; track s) { <li>{{ s }}</li> }
+            </ul>
+          }
+        </section>
+      } @else {
+        <section class="panel ent aviso-det" style="--i: 2">
+          <p class="sub" style="margin:0">Pulsa <strong>Analizar de nuevo</strong> para ver el certificado, los puertos y los subdominios de este análisis.</p>
+        </section>
+      }
+
+      <section class="panel ent" style="--i: 5">
+        <h3 class="lat-titulo">Historial</h3>
+        @if (tendencia().length > 1) {
+          <div class="barras" aria-hidden="true">
+            @for (a of tendencia(); track a.id; let j = $index; let ult = $last) {
+              <div class="col" [class.actual]="ult" [style.--j]="j" [title]="(a.fecha | date: 'dd/MM/yyyy HH:mm') + ' · ' + a.puntaje + ' puntos'">
+                <span class="val">{{ a.puntaje }}</span>
+                <div class="pilar"><i [attr.data-nivel]="a.nivel" [style.height.%]="a.puntaje"></i></div>
+                <span class="fch">{{ a.fecha | date: 'dd/MM' }}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="sub nada">La tendencia aparece desde el segundo análisis.</p>
+        }
+        <ul class="historial">
+          @for (f of filasHistorial(); track f.a.id) {
+            <li>
+              <span class="h-fecha">{{ f.a.fecha | date: 'dd/MM/yy HH:mm' }}</span>
+              <strong>{{ f.a.puntaje }}</strong>
+              @if (f.d !== null && f.d !== 0) {
+                <span class="mini-delta" [attr.data-dir]="f.d > 0 ? 'sube' : 'baja'">{{ f.d > 0 ? '▲' + f.d : '▼' + -f.d }}</span>
+              } @else {
+                <span class="mini-delta"></span>
+              }
+              <span class="chip-nivel peq" [attr.data-nivel]="f.a.nivel">{{ etiqueta[f.a.nivel] }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    </aside>
+  </div>
+}

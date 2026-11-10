@@ -1,0 +1,185 @@
+<header class="encabezado">
+  <div>
+    <p class="etiqueta-panel"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z" /></svg> PANEL DE CONTROL</p>
+    <h1>Mis dominios</h1>
+    <p class="sub">Estado de seguridad de los sitios que vigilas</p>
+  </div>
+  <button class="btn-agregar" type="button" (click)="mostrarForm.set(!mostrarForm())">
+    {{ mostrarForm() ? 'Cerrar' : '＋ Agregar dominio' }}
+  </button>
+</header>
+
+@if (mostrarForm()) {
+  <section class="panel">
+    <form class="fila-agregar" (ngSubmit)="agregar()">
+      <input
+        class="campo"
+        type="text"
+        name="nombre"
+        [(ngModel)]="nuevo"
+        placeholder="ejemplo.com"
+        aria-label="Nombre del dominio"
+        required
+      />
+      <button class="btn" type="submit" [disabled]="agregando()">
+        {{ agregando() ? 'Agregando…' : 'Agregar' }}
+      </button>
+    </form>
+  </section>
+}
+
+@if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+}
+
+<section class="resumen-cards">
+  <article class="stat" style="--i: 0">
+    <div class="stat-top"><span class="stat-titulo">Dominios vigilados</span><span class="stat-icono"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" /></svg></span></div>
+    <strong class="stat-valor">{{ n(conteo().todos) }}</strong>
+  </article>
+  <article class="stat" style="--i: 1">
+    <div class="stat-top"><span class="stat-titulo">Puntaje promedio</span><span class="stat-icono"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 17a8 8 0 1116 0" /><path d="M12 17l4-5" stroke-linecap="round" /></svg></span></div>
+    <strong class="stat-valor">
+      {{ promedio() === null ? '—' : n(promedio()) }}<small> / 100</small>
+    </strong>
+    <div class="barra-prom"><span [style.width.%]="(promedio() ?? 0) * k()"></span></div>
+  </article>
+  <article class="stat" style="--i: 2">
+    <div class="stat-top"><span class="stat-titulo">Dominios críticos</span><span class="stat-icono rojo"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z" /><path d="M12 8v4M12 15v.5" stroke-linecap="round" /></svg></span></div>
+    <strong class="stat-valor" [class.rojo]="conteo().critico > 0">{{ n(conteo().critico) }}</strong>
+  </article>
+  <article class="stat" style="--i: 3">
+    <div class="stat-top"><span class="stat-titulo">Sin analizar</span><span class="stat-icono ambar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" stroke-linecap="round" /></svg></span></div>
+    <strong class="stat-valor" [class.ambar]="conteo().sin > 0">{{ n(conteo().sin) }}</strong>
+  </article>
+</section>
+
+<section class="filtros">
+  <label class="buscar-caja">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" stroke-linecap="round" /></svg>
+    <input
+      class="buscar"
+      type="search"
+      name="buscar"
+      placeholder="Buscar dominio por nombre…"
+      aria-label="Buscar dominio"
+      [ngModel]="busqueda()"
+      (ngModelChange)="busqueda.set($event)"
+    />
+  </label>
+  <div class="chips" role="group" aria-label="Filtrar por estado">
+    @for (f of filtros; track f.valor) {
+      <button
+        type="button"
+        class="chip"
+        [class.activo]="filtro() === f.valor"
+        (click)="filtro.set(f.valor)"
+      >
+        {{ f.texto }} ({{ conteo()[f.valor] }})
+      </button>
+    }
+  </div>
+</section>
+
+@if (analizando()) {
+  <p class="aviso">Analizando el dominio… puede tardar hasta 30 segundos.</p>
+}
+
+@if (cargando()) {
+  <p class="sub">Cargando…</p>
+} @else if (dominios().length === 0) {
+  <section class="vacio">
+    <h2>Aún no tienes dominios</h2>
+    <p class="sub">Agrega el primero con el botón de arriba para empezar a vigilarlo.</p>
+  </section>
+} @else if (visibles().length === 0) {
+  <p class="sub">Ningún dominio coincide con la búsqueda o el filtro.</p>
+} @else {
+  <section class="rejilla">
+    @for (d of visibles(); track d.id; let i = $index) {
+      <article class="dominio" [attr.data-nivel]="d.nivel ?? 'sin'" [style.--i]="i + 4">
+        <div class="dom-cab">
+          <span class="dom-icono"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" /></svg></span>
+          <h2 class="dom-nombre">{{ d.nombreDominio }}</h2>
+          @if (d.nivel) {
+            <span class="badge" [attr.data-nivel]="d.nivel">{{ etiqueta[d.nivel] }}</span>
+          } @else {
+            <span class="badge" data-nivel="sin">Sin analizar</span>
+          }
+        </div>
+
+        <div class="dom-cuerpo">
+          <app-aro-puntaje [puntaje]="d.ultimoPuntaje" [nivel]="d.nivel" [progreso]="k()" [texto]="d.nivel ? 'PUNTOS' : 'SIN DATOS'" />
+
+          <div class="dom-info">
+            @if (!d.nivel) {
+              <p class="pista">Haz el primer análisis para revisar su certificado, reputación y exposición.</p>
+              <p class="meta">Agregado el {{ fecha(d.creadoEn) }}</p>
+            } @else if (info()[d.id]; as inf) {
+              <div class="fila-tend">
+                @if (inf.delta === null) {
+                  <span class="delta" data-dir="nuevo">Primer análisis</span>
+                } @else if (inf.delta > 0) {
+                  <span class="delta" data-dir="sube">▲ +{{ inf.delta }}</span>
+                  <span class="vs">vs. el análisis anterior</span>
+                } @else if (inf.delta < 0) {
+                  <span class="delta" data-dir="baja">▼ −{{ -inf.delta }}</span>
+                  <span class="vs">vs. el análisis anterior</span>
+                } @else {
+                  <span class="delta" data-dir="igual">＝ Sin cambios</span>
+                  <span class="vs">vs. el análisis anterior</span>
+                }
+              </div>
+              @if (inf.serie.length > 1) {
+                <div class="spark" aria-hidden="true">
+                  <svg viewBox="0 0 160 52" preserveAspectRatio="none">
+                    <path class="area" [attr.d]="inf.area" />
+                    <path class="linea" [attr.d]="inf.trazo" />
+                  </svg>
+                  <i class="punto-fin" [style.top.%]="inf.yUlt"></i>
+                </div>
+              } @else {
+                <p class="meta">La tendencia aparece desde el segundo análisis.</p>
+              }
+              <p class="meta">Último análisis: {{ inf.hace }}</p>
+            } @else if (!extrasListos()) {
+              <div class="esqueleto" aria-hidden="true"><span></span><span></span><span></span></div>
+            } @else {
+              <p class="meta">Agregado el {{ fecha(d.creadoEn) }}</p>
+            }
+          </div>
+        </div>
+
+        @if (d.nivel && info()[d.id]; as inf) {
+          <div class="problema" [attr.data-sev]="inf.principal ? inf.principal.severidad : 'ok'">
+            <span class="punto-sev"></span>
+            <div class="problema-txt">
+              <small>{{ inf.principal ? 'Problema principal · ' + etiqSev[inf.principal.severidad] : 'Estado' }}</small>
+              <p>{{ inf.principal ? inf.principal.titulo : 'Sin problemas relevantes en el último análisis' }}</p>
+            </div>
+            @if (inf.relevantes > 0) {
+              <span class="cuenta">{{ inf.relevantes }} por revisar</span>
+            }
+          </div>
+        }
+
+        <footer class="dom-pie">
+          @if (d.nivel) {
+            <a class="btn-sec" [routerLink]="['/dominios', d.id]"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg> Ver detalle</a>
+          } @else {
+            <span></span>
+          }
+          <button
+            class="btn-prim"
+            type="button"
+            [disabled]="analizando() !== null"
+            (click)="analizar(d)"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7" stroke-linecap="round" /></svg>
+            {{ analizando() === d.id ? 'Analizando…' : d.nivel ? 'Analizar ahora' : 'Primer análisis' }}
+          </button>
+        </footer>
+      </article>
+    }
+  </section>
+}

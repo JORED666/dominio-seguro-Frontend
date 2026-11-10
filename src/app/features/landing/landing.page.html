@@ -1,0 +1,166 @@
+<div class="lp" [class.reducir]="reducir" [class.en-pausa]="introActiva()">
+  @if (introActiva()) {
+    <app-intro-ascii (terminada)="introActiva.set(false)" />
+  }
+  <div class="grano" aria-hidden="true"></div>
+
+  <!-- NAVEGACIÓN -->
+  <header class="nav" [class.solido]="bajado()">
+    <a class="logo con-marca" routerLink="/" aria-label="Dominio Seguro, inicio"><app-marca [tam]="30" [mini]="true" />DOMINIO<b>/</b>SEGURO</a>
+    <nav class="nav-links">
+      <a href="#escaner" (click)="ir($event, 'escaner')">Análisis</a>
+      <a href="#revisamos" (click)="ir($event, 'revisamos')">Qué revisamos</a>
+      <a href="#pasos" (click)="ir($event, 'pasos')">Cómo funciona</a>
+    </nav>
+    <div class="nav-acciones">
+      <a class="btn-linea" routerLink="/login">Entrar</a>
+      <a class="btn-neon" routerLink="/registro">Crear cuenta</a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero" id="inicio">
+    <div class="hero-rejilla" aria-hidden="true"></div>
+    <div class="barrido" aria-hidden="true"></div>
+
+    <div class="hero-contenido">
+      <div class="hero-izq">
+        <p class="etq"><i class="parpadeo"></i> // VIGILANCIA DE DOMINIOS PARA NEGOCIOS</p>
+        <h1>
+          <span class="ln" style="--i: 0"><span>¿TU SITIO</span></span>
+          <span class="ln" style="--i: 1"><span>WEB ES</span></span>
+          <span class="ln" style="--i: 2"><span class="hueco">REALMENTE</span></span>
+          <span class="ln" style="--i: 3"><span class="neon">SEGURO<em>?</em></span></span>
+        </h1>
+        <p class="lead">
+          Escaneamos tu dominio todos los días y te avisamos, en lenguaje claro, antes de que algo falle o afecte a tus clientes.
+        </p>
+        <div class="cta-fila">
+          <a class="btn-neon grande" routerLink="/registro">EMPEZAR GRATIS <app-icono nombre="flecha" [tam]="18" /></a>
+          <a class="btn-linea grande" href="#escaner" (click)="ir($event, 'escaner')">VER UN ANÁLISIS ↓</a>
+        </div>
+      </div>
+
+      <aside class="term" aria-label="Ejemplo ilustrativo de un análisis">
+        <div class="term-barra">
+          <span></span><span></span><span></span>
+          <small>ejemplo ilustrativo</small>
+        </div>
+        <div class="term-cuerpo">
+          <p class="t" style="--d: 0.9s"><b class="g">$</b> escanear panaderiaelsol.mx</p>
+          <p class="t" style="--d: 1.5s"><b class="ok">[ OK ]</b> Certificado TLS vigente</p>
+          <p class="t" style="--d: 1.9s"><b class="ok">[ OK ]</b> Protocolo TLS 1.3</p>
+          <p class="t" style="--d: 2.3s"><b class="al">[ !! ]</b> Falta cabecera HSTS</p>
+          <p class="t" style="--d: 2.7s"><b class="ok">[ OK ]</b> SPF · DKIM · DMARC</p>
+          <p class="t" style="--d: 3.1s"><b class="al">[ !! ]</b> 2 subdominios olvidados</p>
+          <div class="t term-puntaje" style="--d: 3.5s">
+            <span>PUNTAJE</span>
+            <strong>{{ puntajeHero() }}<small>/100</small></strong>
+            <div class="term-barra-p"><i [style.width.%]="puntajeHero()"></i></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-pista">
+        @for (n of [1, 2]; track n) {
+          <span>TLS ✦ HSTS ✦ SPF ✦ DKIM ✦ DMARC ✦ SUBDOMINIOS ✦ TYPOSQUATTING ✦ REPUTACIÓN DE IP ✦ </span>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ESCÁNER (sección fija que se controla con el scroll) -->
+  <section class="escaner" id="escaner" #escaner>
+    <div class="esc-pin">
+      <div class="linea-escaneo" aria-hidden="true"></div>
+      <div class="esc-izq">
+        <p class="etq">// 01 · ASÍ SE VE UN ANÁLISIS</p>
+        <div class="gran-num">{{ puntajeEsc() }}<small>/100</small></div>
+        <div class="barra-g"><i [style.width.%]="puntajeEsc()"></i></div>
+        <p class="esc-estado">{{ textoEstado() }}</p>
+        <p class="nota">Ejemplo ilustrativo · desplázate para escanear</p>
+      </div>
+      <ul class="esc-lista">
+        @for (c of revisiones; track c.titulo; let i = $index) {
+          <li [attr.data-e]="estado(i)">
+            <span class="chip">
+              @switch (estado(i)) {
+                @case ('ok') { ✓ }
+                @case ('alerta') { ! }
+                @case ('escaneando') { <i class="parpadeo"></i> }
+                @default { · }
+              }
+            </span>
+            <div>
+              <strong>{{ c.titulo }}</strong>
+              <small>{{ estado(i) === 'espera' || estado(i) === 'escaneando' ? 'Analizando…' : c.detalle }}</small>
+            </div>
+          </li>
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- QUÉ REVISAMOS -->
+  <section class="revisamos" id="revisamos">
+    <p class="etq rv">// 02 · QUÉ REVISAMOS</p>
+    <h2 class="titulo-gigante rv">CINCO COSAS<br />QUE PUEDEN<br /><span class="neon">ROMPER TU NEGOCIO</span></h2>
+    <div class="filas">
+      @for (p of pilares; track p.num) {
+        <article class="fila rv">
+          <span class="fila-num">{{ p.num }}</span>
+          <h3>{{ p.titulo }}</h3>
+          <p>{{ p.texto }}</p>
+          @if (!p.listo) { <span class="pronto">PRÓXIMAMENTE</span> } @else { <span class="listo">ACTIVO</span> }
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- CÓMO FUNCIONA: tarjetas que se apilan -->
+  <section class="pasos" id="pasos">
+    <p class="etq rv">// 03 · CÓMO FUNCIONA</p>
+    <h2 class="titulo-gigante rv">CUATRO PASOS.<br /><span class="hueco">CERO TECNICISMOS.</span></h2>
+    <div class="pila">
+      @for (s of pasos; track s.n; let i = $index) {
+        <article class="paso" [class.ultimo]="i === pasos.length - 1" [style.--i]="i">
+          <span class="paso-n">0{{ s.n }}</span>
+          <div>
+            <h3>{{ s.titulo }}</h3>
+            <p>{{ s.texto }}</p>
+          </div>
+          <span class="paso-pie">{{ s.pie }}</span>
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- MANIFIESTO: las palabras se encienden con el scroll -->
+  <section class="manifiesto" #manifiesto>
+    <div class="man-pin">
+      <p class="etq">// 04 · NUESTRA IDEA</p>
+      <p class="man-texto" aria-label="La seguridad digital no tiene por qué ser intimidante. Te avisamos antes de que algo falle, en un lenguaje que cualquier dueño de negocio entiende.">
+        @for (w of palabras; track $index; let i = $index) {
+          <span class="pal" [class.on]="i < palabrasOn()" aria-hidden="true">{{ w }} </span>
+        }
+      </p>
+    </div>
+  </section>
+
+  <!-- CTA FINAL -->
+  <section class="final">
+    <h2 class="titulo-gigante rv">ANALIZA TU<br /><span class="neon">PRIMER DOMINIO</span></h2>
+    <p class="rv final-sub">Gratis. Sin instalar nada. Resultados en menos de un minuto.</p>
+    <a class="btn-neon enorme rv" routerLink="/registro">CREAR CUENTA GRATIS <app-icono nombre="flecha" [tam]="22" /></a>
+    <a class="ya-tengo rv" routerLink="/login">Ya tengo cuenta →</a>
+  </section>
+
+  <footer class="pie" id="contacto">
+    <div class="pie-fila">
+      <strong class="logo con-marca"><app-marca [tam]="26" [mini]="true" />DOMINIO<b>/</b>SEGURO</strong>
+      <p>© 2026 Dominio Seguro. Solo analizamos dominios cuya propiedad fue verificada por sus legítimos dueños.</p>
+    </div>
+  </footer>
+</div>
