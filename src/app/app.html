@@ -1,12 +1,7 @@
 @if (auth.autenticado()) {
   <header class="barra">
     <a class="logo" routerLink="/dominios">
-      <span class="logo-icono">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z" />
-          <path d="M9 12l2 2 4-4" stroke-linecap="round" />
-        </svg>
-      </span>
+      <span class="logo-icono"><app-marca [tam]="26" [mini]="true" /></span>
       Dominio Seguro
     </a>
 

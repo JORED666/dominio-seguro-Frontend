@@ -1,8 +1,13 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth.guard';
+import { authGuard, invitadoGuard } from './core/auth.guard';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'dominios' },
+  {
+    path: '',
+    pathMatch: 'full',
+    canActivate: [invitadoGuard],
+    loadComponent: () => import('./pages/landing/landing').then((m) => m.Landing),
+  },
   { path: 'login', loadComponent: () => import('./pages/login/login').then((m) => m.Login) },
   {
     path: 'registro',
@@ -18,5 +23,5 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/resultado/resultado').then((m) => m.Resultado),
   },
-  { path: '**', redirectTo: 'dominios' },
+  { path: '**', redirectTo: '' },
 ];
