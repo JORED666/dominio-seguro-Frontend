@@ -20,7 +20,6 @@ interface Info {
 }
 
 const ORDEN: Record<Severidad, number> = { critica: 0, alta: 1, media: 2, baja: 3, info: 4 };
-const ETIQ_SEV: Record<Severidad, string> = { critica: 'Crítica', alta: 'Alta', media: 'Media', baja: 'Baja', info: 'Info' };
 
 // Medidas de la mini gráfica (viewBox)
 const GW = 160;
@@ -402,7 +401,7 @@ export class Dominios {
   private destruir = inject(DestroyRef);
 
   etiqueta = ETIQUETA_NIVEL;
-  etiqSev = ETIQ_SEV;
+  etiqSev = ETIQUETA_SEVERIDAD;
   filtros: { valor: Filtro; texto: string }[] = [
     { valor: 'todos', texto: 'Todos' },
     { valor: 'bueno', texto: 'Bueno' },
@@ -423,11 +422,10 @@ export class Dominios {
   busqueda = signal('');
   nuevo = '';
 
-  // Progreso (0 a 1) de la animación de números y aros
-  k = signal(0);
-  private raf = 0;
+  // Animación de entrada de números y aros (solo la primera vez que llegan los datos)
+  private anim = crearAnimacion(1000);
+  k = this.anim.k;
   private yaAnimado = false;
-  private reducir = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   conteo = computed(() => {
     const l = this.dominios();
@@ -458,7 +456,6 @@ export class Dominios {
   });
 
   constructor() {
-    this.destruir.onDestroy(() => cancelAnimationFrame(this.raf));
     this.cargar();
   }
 
@@ -468,31 +465,13 @@ export class Dominios {
   }
 
   fecha(iso: string) {
-    return new Date(iso).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
-  }
-
-  private hace(iso: string): string {
-    const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-    const rtf = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
-    if (s < 3600) return rtf.format(-Math.max(1, Math.round(s / 60)), 'minute');
-    if (s < 86400) return rtf.format(-Math.round(s / 3600), 'hour');
-    return rtf.format(-Math.round(s / 86400), 'day');
+    return fechaCorta(iso);
   }
 
   private animarEntrada() {
     if (this.yaAnimado) return;
     this.yaAnimado = true;
-    if (this.reducir) {
-      this.k.set(1);
-      return;
-    }
-    const t0 = performance.now();
-    const paso = (t: number) => {
-      const x = Math.min(1, (t - t0) / 1000);
-      this.k.set(1 - Math.pow(1 - x, 3));
-      if (x < 1) this.raf = requestAnimationFrame(paso);
-    };
-    this.raf = requestAnimationFrame(paso);
+    this.anim.iniciar();
   }
 
   // Tendencia, último análisis y problema principal, a partir del historial de cada dominio
@@ -502,7 +481,7 @@ export class Dominios {
       .map((a) => a.puntaje)
       .reverse();
     const relevantes = (h[0].hallazgos ?? []).filter((x) => x.severidad !== 'info');
-    const principal = [...relevantes].sort((a, b) => ORDEN[a.severidad] - ORDEN[b.severidad])[0] ?? null;
+    const principal = [...relevantes].sort((a, b) => ORDEN_SEVERIDAD[a.severidad] - ORDEN_SEVERIDAD[b.severidad])[0] ?? null;
 
     const xs = serie.map((_, i) => GP + (i * (GW - 2 * GP)) / Math.max(1, serie.length - 1));
     const ys = serie.map((v) => GH - GP - (Math.min(100, Math.max(0, v)) / 100) * (GH - 2 * GP));
@@ -512,7 +491,7 @@ export class Dominios {
     return {
       serie,
       delta: h.length > 1 ? h[0].puntaje - h[1].puntaje : null,
-      hace: this.hace(h[0].fecha),
+      hace: hace(h[0].fecha),
       principal,
       relevantes: relevantes.length,
       trazo,

@@ -4,15 +4,9 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { DominiosService } from '../../core/dominios.service';
 import { Analisis, Dominio, ETIQUETA_NIVEL, Hallazgo, Severidad, mensajeError } from '../../core/modelos';
+import { ETIQUETA_SEVERIDAD, ORDEN_SEVERIDAD } from '../../domain/severidad';
+import { crearAnimacion } from '../../shared/utils/animacion';
 
-const ORDEN: Record<Severidad, number> = { critica: 0, alta: 1, media: 2, baja: 3, info: 4 };
-const ETIQUETA_SEVERIDAD: Record<Severidad, string> = {
-  critica: 'Crítica',
-  alta: 'Alta',
-  media: 'Media',
-  baja: 'Baja',
-  info: 'Info',
-};
 const ORDEN_CATEGORIAS = ['TLS', 'Reputación', 'Exposición', 'Subdominios'];
 const MENSAJE_NIVEL = {
   bueno: 'La configuración de seguridad es sólida. Revisa los puntos informativos para mantenerla así.',
@@ -551,10 +545,9 @@ export class Resultado {
   error = signal('');
   filtro = signal<FiltroHallazgos>('todos');
 
-  // Progreso (0 a 1) de la animación del puntaje y las barras
-  k = signal(0);
-  private raf = 0;
-  private reducir = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Animación de entrada del puntaje y las barras
+  private anim = crearAnimacion(1100);
+  k = this.anim.k;
 
   ultimo = computed(() => this.historial()[0] ?? null);
   puntajeAnimado = computed(() => Math.round((this.ultimo()?.puntaje ?? 0) * this.k()));
@@ -575,7 +568,7 @@ export class Resultado {
   // El hallazgo más grave que no sea informativo, con su recomendación
   primerPaso = computed(() => {
     const lista = (this.ultimo()?.hallazgos ?? []).filter((h) => h.severidad !== 'info');
-    return [...lista].sort((a, b) => ORDEN[a.severidad] - ORDEN[b.severidad])[0] ?? null;
+    return [...lista].sort((a, b) => ORDEN_SEVERIDAD[a.severidad] - ORDEN_SEVERIDAD[b.severidad])[0] ?? null;
   });
 
   // Hallazgos agrupados por categoría (las más graves primero) y filtrados por el chip activo
@@ -593,7 +586,7 @@ export class Resultado {
     };
     return [...mapa.entries()]
       .map(([categoria, lista]) => {
-        const items = [...lista].sort((a, b) => ORDEN[a.severidad] - ORDEN[b.severidad]);
+        const items = [...lista].sort((a, b) => ORDEN_SEVERIDAD[a.severidad] - ORDEN_SEVERIDAD[b.severidad]);
         return {
           categoria,
           items,
@@ -601,7 +594,7 @@ export class Resultado {
           problemas: items.filter((h) => h.severidad !== 'info').length,
         };
       })
-      .sort((a, b) => ORDEN[a.peor] - ORDEN[b.peor] || rango(a.categoria) - rango(b.categoria));
+      .sort((a, b) => ORDEN_SEVERIDAD[a.peor] - ORDEN_SEVERIDAD[b.peor] || rango(a.categoria) - rango(b.categoria));
   });
 
   // Últimos 8 análisis, del más antiguo al más reciente, para las barras de tendencia
@@ -620,7 +613,6 @@ export class Resultado {
   });
 
   constructor() {
-    this.destruir.onDestroy(() => cancelAnimationFrame(this.raf));
     this.cargar();
   }
 
@@ -658,19 +650,7 @@ export class Resultado {
   }
 
   private animarEntrada() {
-    cancelAnimationFrame(this.raf);
-    if (this.reducir) {
-      this.k.set(1);
-      return;
-    }
-    this.k.set(0);
-    const t0 = performance.now();
-    const paso = (t: number) => {
-      const x = Math.min(1, (t - t0) / 1100);
-      this.k.set(1 - Math.pow(1 - x, 3));
-      if (x < 1) this.raf = requestAnimationFrame(paso);
-    };
-    this.raf = requestAnimationFrame(paso);
+    this.anim.iniciar();
   }
 
   cargar() {
