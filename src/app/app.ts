@@ -1,7 +1,7 @@
 import { Component, HostListener, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AuthService } from './core/auth.service';
-import { Marca } from './shared/marca/marca';
+import { AuthService } from './core/auth/auth.service';
+import { Marca } from './shared/ui/marca/marca';
 
 @Component({
   selector: 'app-root',

@@ -1,0 +1,16 @@
+:host {
+  --c: var(--borde);
+  flex: none; position: relative; width: var(--tam); height: var(--tam); border-radius: 50%;
+  display: grid; place-content: center; text-align: center;
+  background: conic-gradient(var(--c) calc(var(--p) * 1%), #2a3042 0);
+}
+:host::before { content: ''; position: absolute; inset: calc(var(--tam) * 0.078); border-radius: 50%; background: var(--hueco); }
+:host([data-nivel='bueno']) { --c: var(--verde); }
+:host([data-nivel='mejoras']) { --c: var(--ambar); }
+:host([data-nivel='critico']) { --c: var(--rojo); }
+.num, .txt { position: relative; }
+.num { font-family: var(--fuente-titulo); font-size: calc(var(--tam) * 0.3); font-weight: 600; line-height: 1; color: var(--titulo); font-variant-numeric: tabular-nums; }
+:host([data-nivel='bueno']) .num { color: var(--verde); }
+:host([data-nivel='mejoras']) .num { color: var(--ambar); }
+:host([data-nivel='critico']) .num { color: var(--rojo); }
+.txt { font-size: max(9px, calc(var(--tam) * 0.068)); letter-spacing: 0.08em; color: var(--suave); margin-top: 3px; }

@@ -1,0 +1,103 @@
+<header class="encabezado ent" style="--i: 0">
+  <div>
+    <p class="etiqueta-panel">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 1112 0c0 6 2 7 2 7H4s2-1 2-7" /><path d="M10 20a2 2 0 004 0" /></svg>
+      CENTRO DE ALERTAS
+    </p>
+    <h1>Alertas</h1>
+    <p class="sub">Lo que necesita tu atención, calculado a partir de tus análisis</p>
+  </div>
+  @if (leyenda().length > 1) {
+    <label class="selector">
+      <span>Dominio</span>
+      <select [value]="dominioSel()" (change)="dominioSel.set($any($event.target).value)" aria-label="Filtrar por dominio">
+        <option value="">Todos</option>
+        @for (d of leyenda(); track d.id) { <option [value]="d.id">{{ d.nombre }}</option> }
+      </select>
+    </label>
+  }
+</header>
+
+@if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p class="sub">Cargando…</p>
+} @else if (leyenda().length === 0) {
+  <section class="panel vacio">
+    <h2>Aún no tienes dominios</h2>
+    <p class="sub">Agrega uno en <a routerLink="/dominios">Mis dominios</a> y las alertas aparecerán aquí.</p>
+  </section>
+} @else {
+  <section class="resumen-cards">
+    <article class="stat ent" style="--i: 1">
+      <span class="stat-titulo">Alertas activas</span>
+      <strong class="stat-valor">{{ n(cuentas().activas) }}</strong>
+      <span class="stat-pie">por revisar</span>
+    </article>
+    <article class="stat ent" style="--i: 2">
+      <span class="stat-titulo">Graves</span>
+      <strong class="stat-valor" [class.rojo]="cuentas().graves > 0">{{ n(cuentas().graves) }}</strong>
+      <span class="stat-pie">críticas y altas</span>
+    </article>
+    <article class="stat ent" style="--i: 3">
+      <span class="stat-titulo">Nuevas</span>
+      <strong class="stat-valor" [class.ambar]="cuentas().nuevas > 0">{{ n(cuentas().nuevas) }}</strong>
+      <span class="stat-pie">desde el análisis anterior</span>
+    </article>
+    <article class="stat ent" style="--i: 4">
+      <span class="stat-titulo">Buenas noticias</span>
+      <strong class="stat-valor" [class.verde]="cuentas().buenas > 0">{{ n(cuentas().buenas) }}</strong>
+      <span class="stat-pie">mejoras y problemas resueltos</span>
+    </article>
+  </section>
+
+  <section class="filtros ent" style="--i: 5">
+    <div class="chips" role="group" aria-label="Filtrar alertas">
+      @for (f of filtros; track f.valor) {
+        <button type="button" class="chip" [class.activo]="filtro() === f.valor" (click)="filtro.set(f.valor)">
+          {{ f.texto }} ({{ cuentaFiltro(f.valor) }})
+        </button>
+      }
+    </div>
+    @if (descartadas().length > 0) {
+      <button type="button" class="enlace" (click)="verDescartadas.set(!verDescartadas())">
+        {{ verDescartadas() ? 'Volver a las activas' : 'Ver descartadas (' + descartadas().length + ')' }}
+      </button>
+    }
+  </section>
+
+  @if (secciones().length === 0) {
+    <section class="panel vacio ent" style="--i: 6">
+      @if (verDescartadas()) {
+        <p class="sub" style="margin:0">No hay alertas descartadas.</p>
+      } @else if (cuentas().activas === 0 && filtro() === 'todas') {
+        <span class="todo-ok" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z" /><path d="m9 12 2 2 4-4" /></svg>
+        </span>
+        <h2>Todo en orden</h2>
+        <p class="sub">No hay alertas activas. Sigue analizando tus dominios de vez en cuando para mantenerlo así.</p>
+      } @else {
+        <p class="sub" style="margin:0">Ninguna alerta coincide con el filtro elegido.</p>
+      }
+    </section>
+  } @else {
+    @for (s of secciones(); track s.titulo; let si = $index) {
+      <section class="seccion ent" [style.--i]="6 + si">
+        <header class="sec-cab">
+          <h2>{{ s.titulo }}</h2>
+          <span class="sec-cuenta">{{ s.items.length }}</span>
+          <p>{{ s.descripcion }}</p>
+        </header>
+        <ul class="lista">
+          @for (a of s.items; track a.id) {
+            <li>
+              <app-alerta-card [alerta]="a" [descartada]="verDescartadas()" (descartar)="descartar($event)" (restaurar)="restaurar($event)" />
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+}

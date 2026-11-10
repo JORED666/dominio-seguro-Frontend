@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, catchError, forkJoin, map, of, switchMap, tap } from 'rxjs';
-import { DominiosService } from '../core/dominios.service';
+import { DominiosApi } from '../core/api/dominios.api';
 import { Analisis, Dominio } from '../core/modelos';
 
 /**
@@ -10,7 +10,7 @@ import { Analisis, Dominio } from '../core/modelos';
  */
 @Injectable({ providedIn: 'root' })
 export class DominiosStore {
-  private api = inject(DominiosService);
+  private api = inject(DominiosApi);
 
   private _dominios = signal<Dominio[]>([]);
   private _historiales = signal<Record<string, Analisis[]>>({});
