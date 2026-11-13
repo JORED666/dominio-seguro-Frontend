@@ -1,0 +1,36 @@
+<article class="similar" [attr.data-riesgo]="similar().riesgo">
+  <div class="cab">
+    <p class="nombre">
+      @for (t of tramos(); track $index) {
+        <span [class.cambio]="t.cambio">{{ t.texto }}</span>
+      }
+    </p>
+    <span class="riesgo">{{ riesgo[similar().riesgo] }}</span>
+  </div>
+
+  <p class="meta">
+    <span>Imita a <strong>{{ similar().original }}</strong></span>
+    <span class="punto"></span><span>{{ tecnica[similar().tecnica] }}</span>
+    <span class="punto"></span><span>{{ cuando() }}</span>
+  </p>
+
+  <ul class="senales">
+    <li class="senal" [attr.data-estado]="similar().estado">{{ estado[similar().estado] }}</li>
+    @if (similar().conCorreo) { <li class="senal mala">Puede enviar correos</li> }
+    @if (similar().conCertificado) { <li class="senal">Tiene certificado HTTPS</li> }
+  </ul>
+
+  @if (similar().riesgo === 'alto') {
+    <p class="reco"><span>Qué hacer</span>Avisa a tus clientes y pide al registrador del dominio que lo dé de baja por suplantación.</p>
+  } @else if (similar().estado === 'libre') {
+    <p class="reco"><span>Qué hacer</span>Está libre: puedes registrarlo tú para que nadie más lo use contra ti.</p>
+  }
+
+  <div class="acciones">
+    @if (revisado()) {
+      <button type="button" class="enlace" (click)="restaurar.emit(similar().id)">Volver a mostrar</button>
+    } @else {
+      <button type="button" class="enlace" (click)="revisar.emit(similar().id)">Marcar como revisado</button>
+    }
+  </div>
+</article>
