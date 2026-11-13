@@ -33,11 +33,7 @@
     </nav>
 
     <div class="usuario">
-      <button class="icono-btn" type="button" disabled title="Alertas: próximamente" aria-label="Alertas (próximamente)">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M6 9a6 6 0 1112 0c0 6 2 7 2 7H4s2-1 2-7" /><path d="M10 20a2 2 0 004 0" />
-        </svg>
-      </button>
+      <app-campana-alertas />
 
       <div class="menu-usuario">
         <button
@@ -60,6 +56,12 @@
               <strong>{{ auth.usuario()?.nombre }}</strong>
               <span>{{ auth.usuario()?.correo }}</span>
             </div>
+            <a class="menu-item neutro" routerLink="/cuenta" role="menuitem">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+              </svg>
+              Mi cuenta
+            </a>
             <button class="menu-item" type="button" role="menuitem" (click)="auth.cerrarSesion()">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9" />

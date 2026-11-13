@@ -90,6 +90,8 @@ a { color: var(--acento-claro); }
   background: transparent; border: 0; border-radius: 10px; color: var(--texto); font: inherit; text-align: left;
 }
 .menu-item:hover { background: rgba(239, 68, 68, 0.12); color: #ff8a8a; }
+.menu-item.neutro { text-decoration: none; }
+.menu-item.neutro:hover { background: rgba(91, 108, 248, 0.14); color: var(--titulo); }
 
 .contenedor { max-width: 1920px; margin: 0 auto; padding: 32px 44px 48px; }
 

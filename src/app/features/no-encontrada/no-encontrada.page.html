@@ -1,0 +1,14 @@
+<section class="vacio">
+  <p class="codigo" aria-hidden="true">404</p>
+  <h1>No encontramos esta página</h1>
+  <p class="sub">La dirección no existe o cambió de lugar. Revisa que esté bien escrita o vuelve al inicio.</p>
+  <div class="acciones">
+    @if (auth.autenticado()) {
+      <a class="accion" routerLink="/dominios">Ir a Mis dominios</a>
+      <a class="accion sec" routerLink="/alertas">Ver alertas</a>
+    } @else {
+      <a class="accion" routerLink="/">Ir al inicio</a>
+      <a class="accion sec" routerLink="/login">Iniciar sesión</a>
+    }
+  </div>
+</section>
