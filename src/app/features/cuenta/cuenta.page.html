@@ -1,0 +1,58 @@
+<header class="encabezado ent" style="--i: 0">
+  <p class="etiqueta-panel">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></svg>
+    MI CUENTA
+  </p>
+  <h1>Mi cuenta</h1>
+  <p class="sub">Tus datos y las preferencias de este navegador</p>
+</header>
+
+<div class="rejilla">
+  <section class="tarjeta perfil ent" style="--i: 1">
+    <span class="avatar-grande" aria-hidden="true">{{ auth.usuario()?.nombre?.charAt(0) }}</span>
+    <div>
+      <h2>{{ auth.usuario()?.nombre }}</h2>
+      <p class="correo">{{ auth.usuario()?.correo }}</p>
+    </div>
+  </section>
+
+  <section class="tarjeta resumen ent" style="--i: 2">
+    <h2>Tu actividad</h2>
+    <dl>
+      <div><dt>Dominios</dt><dd>{{ dominios() }}</dd></div>
+      <div><dt>Análisis realizados</dt><dd>{{ analisis() }}</dd></div>
+      <div><dt>Alertas activas</dt><dd [class.ambar]="activas() > 0">{{ activas() }}</dd></div>
+    </dl>
+    <a class="enlace" routerLink="/dominios">Ir a Mis dominios →</a>
+  </section>
+
+  <section class="tarjeta ent" style="--i: 3">
+    <h2>Preferencias de este navegador</h2>
+    <p class="sub">Lo que descartas o marcas como revisado se guarda solo en este navegador.</p>
+    <ul class="prefs">
+      <li>
+        <div>
+          <strong>Alertas descartadas</strong>
+          <span>{{ alertas.descartadas().length }} guardadas</span>
+        </div>
+        <button type="button" class="sec" [disabled]="alertas.descartadas().length === 0" (click)="alertas.restaurarTodas()">Restaurar</button>
+      </li>
+      <li>
+        <div>
+          <strong>Dominios similares revisados</strong>
+          <span>{{ similaresRevisados() }} guardados</span>
+        </div>
+        <button type="button" class="sec" [disabled]="similaresRevisados() === 0" (click)="restaurarSimilares()">Restaurar</button>
+      </li>
+    </ul>
+  </section>
+
+  <section class="tarjeta ent" style="--i: 4">
+    <h2>Sesión</h2>
+    <p class="sub">Tu sesión se cierra sola al cerrar la pestaña del navegador.</p>
+    <button type="button" class="salir" (click)="auth.cerrarSesion()">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9" /></svg>
+      Cerrar sesión
+    </button>
+  </section>
+</div>

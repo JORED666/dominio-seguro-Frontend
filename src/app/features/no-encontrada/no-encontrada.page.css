@@ -1,0 +1,12 @@
+:host { display: block; }
+.vacio { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 48px 16px; animation: entra 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+@keyframes entra { from { opacity: 0; transform: translateY(14px); } }
+.codigo { margin: 0; font-family: var(--fuente-titulo); font-size: clamp(5rem, 18vw, 9rem); font-weight: 700; line-height: 1; letter-spacing: -0.04em; background: linear-gradient(180deg, var(--acento-claro), color-mix(in srgb, var(--acento) 25%, transparent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+h1 { margin: 8px 0 0; font-size: 1.8rem; }
+.sub { max-width: 440px; margin: 10px 0 0; }
+.acciones { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 26px; }
+.accion { height: 42px; padding: 0 22px; display: inline-flex; align-items: center; border-radius: 999px; font-size: 14px; font-weight: 600; text-decoration: none; background: var(--acento); color: #fff; border: 1px solid var(--acento); }
+.accion:hover { filter: brightness(1.1); }
+.accion.sec { background: transparent; color: var(--texto); border-color: var(--borde); }
+.accion.sec:hover { border-color: var(--acento-claro); filter: none; }
+@media (prefers-reduced-motion: reduce) { .vacio { animation: none; } }

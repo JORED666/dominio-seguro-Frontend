@@ -1,15 +1,14 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { mensajeError } from '../../core/modelos';
+import { AlertasStore } from '../../data/alertas.store';
 import { DominiosStore } from '../../data/dominios.store';
 import { AlertaCard } from './componentes/alerta-card/alerta-card';
-import { Alerta, construirAlertas } from '../../domain/alertas';
+import { Alerta } from '../../domain/alertas';
 import { ORDEN_SEVERIDAD, Sev, esGrave } from '../../domain/severidad';
 import { crearAnimacion } from '../../shared/utils/animacion';
-import { guardarLista, leerLista } from '../../shared/utils/almacen';
 
 type Filtro = 'todas' | 'graves' | 'nuevas' | 'buenas';
-const CLAVE_DESCARTADAS = 'ds-alertas-descartadas';
 
 @Component({
   selector: 'app-alertas',
@@ -19,6 +18,7 @@ const CLAVE_DESCARTADAS = 'ds-alertas-descartadas';
 })
 export class Alertas {
   private store = inject(DominiosStore);
+  private alertasStore = inject(AlertasStore);
 
   filtros: { valor: Filtro; texto: string }[] = [
     { valor: 'todas', texto: 'Todas' },
@@ -30,11 +30,11 @@ export class Alertas {
   cargando = signal(true);
   error = signal('');
   leyenda = signal<{ id: string; nombre: string }[]>([]);
-  alertas = signal<Alerta[]>([]);
+  alertas = this.alertasStore.todas;
 
   filtro = signal<Filtro>('todas');
   dominioSel = signal('');
-  descartadas = signal<string[]>(leerLista(CLAVE_DESCARTADAS));
+  descartadas = this.alertasStore.descartadas;
   verDescartadas = signal(false);
 
   // Animación de entrada de los números
@@ -96,18 +96,12 @@ export class Alertas {
   }
 
   descartar(id: string) {
-    this.guardar([...this.descartadas(), id]);
+    this.alertasStore.descartar(id);
   }
 
   restaurar(id: string) {
-    const resto = this.descartadas().filter((x) => x !== id);
-    this.guardar(resto);
-    if (!resto.length) this.verDescartadas.set(false);
-  }
-
-  private guardar(lista: string[]) {
-    this.descartadas.set(lista);
-    guardarLista(CLAVE_DESCARTADAS, lista);
+    this.alertasStore.restaurar(id);
+    if (!this.descartadas().length) this.verDescartadas.set(false);
   }
 
   private cargar() {
@@ -115,12 +109,6 @@ export class Alertas {
       next: (lista) => {
         this.leyenda.set(lista.map((d) => ({ id: d.id, nombre: d.nombreDominio })));
         this.store.cargarHistoriales(lista).subscribe(() => {
-          const todas = lista.flatMap((d) => {
-            const h = this.store.historialDe(d.id);
-            // Con nivel pero sin historial: la API falló para ese dominio, no se inventan alertas
-            return d.nivel && !h.length ? [] : construirAlertas(d, h);
-          });
-          this.alertas.set(todas);
           this.cargando.set(false);
           this.anim.iniciar();
         });

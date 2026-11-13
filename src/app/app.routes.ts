@@ -43,5 +43,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/similares/similares.page').then((m) => m.Similares),
   },
-  { path: '**', redirectTo: '' },
+  {
+    path: 'cuenta',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/cuenta/cuenta.page').then((m) => m.Cuenta),
+  },
+  { path: '**', loadComponent: () => import('./features/no-encontrada/no-encontrada.page').then((m) => m.NoEncontrada) },
 ];
