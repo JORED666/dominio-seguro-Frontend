@@ -1,0 +1,99 @@
+<header class="encabezado ent" style="--i: 0">
+  <div>
+    <p class="etiqueta-panel">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="6" /><circle cx="15" cy="12" r="6" /></svg>
+      PROTECCIÓN DE MARCA
+    </p>
+    <h1>Dominios similares</h1>
+    <p class="sub">Direcciones parecidas a las tuyas que alguien podría usar para engañar a tus clientes</p>
+  </div>
+  @if (vigilados().length > 1) {
+    <label class="selector">
+      <span>Dominio</span>
+      <select [value]="dominioSel()" (change)="dominioSel.set($any($event.target).value)" aria-label="Filtrar por dominio">
+        <option value="">Todos</option>
+        @for (d of vigilados(); track d.id) { <option [value]="d.id">{{ d.nombre }}</option> }
+      </select>
+    </label>
+  }
+</header>
+
+@if (esEjemplo) {
+  <aside class="aviso ent" style="--i: 1" role="note">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8v.5" /></svg>
+    <p><strong>Vista previa con datos de ejemplo.</strong> Las variantes se generan a partir de tus dominios, pero todavía no se consulta si están registradas de verdad: ese análisis llegará con el servidor.</p>
+  </aside>
+}
+
+@if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p class="sub">Cargando…</p>
+} @else if (vigilados().length === 0) {
+  <section class="panel vacio">
+    <h2>Aún no tienes dominios</h2>
+    <p class="sub">Agrega uno en <a routerLink="/dominios">Mis dominios</a> y buscaremos direcciones parecidas a la tuya.</p>
+  </section>
+} @else {
+  <section class="resumen-cards">
+    <article class="stat ent" style="--i: 2">
+      <span class="stat-titulo">Dominios vigilados</span>
+      <strong class="stat-valor">{{ n(dominioSel() ? 1 : vigilados().length) }}</strong>
+      <span class="stat-pie">con búsqueda de parecidos</span>
+    </article>
+    <article class="stat ent" style="--i: 3">
+      <span class="stat-titulo">Parecidos registrados</span>
+      <strong class="stat-valor" [class.ambar]="cuentas().encontrados > 0">{{ n(cuentas().encontrados) }}</strong>
+      <span class="stat-pie">ya existen en internet</span>
+    </article>
+    <article class="stat ent" style="--i: 4">
+      <span class="stat-titulo">Riesgo alto</span>
+      <strong class="stat-valor" [class.rojo]="cuentas().altos > 0">{{ n(cuentas().altos) }}</strong>
+      <span class="stat-pie">en uso y listos para engañar</span>
+    </article>
+    <article class="stat ent" style="--i: 5">
+      <span class="stat-titulo">Disponibles</span>
+      <strong class="stat-valor" [class.verde]="cuentas().libres > 0">{{ n(cuentas().libres) }}</strong>
+      <span class="stat-pie">podrías registrarlos tú</span>
+    </article>
+  </section>
+
+  <section class="filtros ent" style="--i: 6">
+    <div class="chips" role="group" aria-label="Filtrar dominios parecidos">
+      @for (f of filtros; track f.valor) {
+        <button type="button" class="chip" [class.activo]="filtro() === f.valor" (click)="filtro.set(f.valor)">{{ f.texto }} ({{ cuentaFiltro(f.valor) }})</button>
+      }
+    </div>
+    @if (revisados().length > 0) {
+      <button type="button" class="enlace" (click)="verRevisados.set(!verRevisados())">
+        {{ verRevisados() ? 'Volver a los pendientes' : 'Ver revisados (' + revisados().length + ')' }}
+      </button>
+    }
+  </section>
+
+  @if (grupos().length === 0) {
+    <section class="panel vacio ent" style="--i: 7">
+      <p class="sub" style="margin: 0">
+        {{ verRevisados() ? 'No hay dominios revisados.' : 'Ningún dominio parecido coincide con el filtro elegido.' }}
+      </p>
+    </section>
+  } @else {
+    @for (g of grupos(); track g.dominio; let gi = $index) {
+      <section class="grupo ent" [style.--i]="7 + gi">
+        <header class="grupo-cab">
+          <h2>{{ g.dominio }}</h2>
+          <span class="grupo-cuenta">{{ g.items.length }}</span>
+        </header>
+        <ul class="lista">
+          @for (s of g.items; track s.id) {
+            <li>
+              <app-similar-card [similar]="s" [revisado]="verRevisados()" (revisar)="revisar($event)" (restaurar)="restaurar($event)" />
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+}
