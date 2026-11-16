@@ -3,6 +3,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { tap } from 'rxjs';
 import { API_URL } from './api-url';
 import { Analisis, Dominio, ResultadoAnalisis } from '../modelos';
+import { SimilarApi } from '../../domain/similares';
 
 @Injectable({ providedIn: 'root' })
 export class DominiosApi {
@@ -27,5 +28,13 @@ export class DominiosApi {
 
   historial(id: string) {
     return this.http.get<Analisis[]>(`${API_URL}/dominios/${id}/analisis`);
+  }
+
+  similares(id: string) {
+    return this.http.get<SimilarApi[]>(`${API_URL}/dominios/${id}/similares`);
+  }
+
+  marcarSimilar(id: string, similarId: string, cambios: { propio?: boolean; revisado?: boolean }) {
+    return this.http.patch<SimilarApi>(`${API_URL}/dominios/${id}/similares/${similarId}`, cambios);
   }
 }

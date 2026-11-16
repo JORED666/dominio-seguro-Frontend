@@ -18,10 +18,10 @@
   }
 </header>
 
-@if (esEjemplo) {
-  <aside class="aviso ent" style="--i: 1" role="note">
+@if (nota()) {
+  <aside class="aviso ent" style="--i: 1" role="status">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8v.5" /></svg>
-    <p><strong>Vista previa con datos de ejemplo.</strong> Las variantes se generan a partir de tus dominios, pero todavía no se consulta si están registradas de verdad: ese análisis llegará con el servidor.</p>
+    <p>{{ nota() }}</p>
   </aside>
 }
 
@@ -54,9 +54,9 @@
       <span class="stat-pie">en uso y listos para engañar</span>
     </article>
     <article class="stat ent" style="--i: 5">
-      <span class="stat-titulo">Disponibles</span>
+      <span class="stat-titulo">Sin registros</span>
       <strong class="stat-valor" [class.verde]="cuentas().libres > 0">{{ n(cuentas().libres) }}</strong>
-      <span class="stat-pie">podrías registrarlos tú</span>
+      <span class="stat-pie">sin registros DNS por ahora</span>
     </article>
   </section>
 
@@ -89,7 +89,7 @@
         <ul class="lista">
           @for (s of g.items; track s.id) {
             <li>
-              <app-similar-card [similar]="s" [revisado]="verRevisados()" (revisar)="revisar($event)" (restaurar)="restaurar($event)" />
+              <app-similar-card [similar]="s" [revisado]="verRevisados()" (revisar)="revisar($event)" (restaurar)="restaurar($event)" (esMio)="esMio($event)" />
             </li>
           }
         </ul>

@@ -1,10 +1,5 @@
-import { Dominio } from '../core/modelos';
-
 // Dominios parecidos al tuyo (typosquatting). Sin Angular.
-// IMPORTANTE: por ahora los estados son SIMULADOS. El backend aún no consulta DNS/WHOIS;
-// cuando exista, bastará con que entregue objetos "Similar" y esta pantalla no cambia.
-export const DATOS_DE_EJEMPLO = true;
-
+// El servidor los calcula consultando DNS; aquí solo se etiquetan y se muestran.
 export type Tecnica = 'omision' | 'repeticion' | 'intercambio' | 'homoglifo' | 'guion' | 'tld';
 export type EstadoSimilar = 'activo' | 'registrado' | 'libre';
 export type RiesgoSimilar = 'alto' | 'medio' | 'bajo';
@@ -21,11 +16,27 @@ export const ETIQUETA_TECNICA: Record<Tecnica, string> = {
 export const ETIQUETA_ESTADO: Record<EstadoSimilar, string> = {
   activo: 'Registrado y en uso',
   registrado: 'Registrado sin web',
-  libre: 'Disponible',
+  libre: 'Sin registros',
 };
 
 export const ETIQUETA_RIESGO: Record<RiesgoSimilar, string> = { alto: 'Riesgo alto', medio: 'Riesgo medio', bajo: 'Riesgo bajo' };
 export const ORDEN_RIESGO: Record<RiesgoSimilar, number> = { alto: 0, medio: 1, bajo: 2 };
+
+// Forma en que responde el servidor
+export interface SimilarApi {
+  id: string;
+  dominioId: string;
+  nombre: string;
+  tecnica: Tecnica;
+  estado: EstadoSimilar;
+  riesgo: RiesgoSimilar;
+  conCorreo: boolean; // tiene registros MX: podría enviar correos haciéndose pasar por ti
+  conCertificado: boolean;
+  propio: boolean; // el usuario dijo que es suyo
+  revisado: boolean;
+  detectadoEn: string | null; // null: nunca ha tenido registros
+  verificadoEn: string | null;
+}
 
 export interface Similar {
   id: string;
@@ -35,75 +46,28 @@ export interface Similar {
   tecnica: Tecnica;
   estado: EstadoSimilar;
   riesgo: RiesgoSimilar;
-  conCorreo: boolean; // tiene registros MX: podría enviar correos haciéndose pasar por ti
+  conCorreo: boolean;
   conCertificado: boolean;
-  detectadoEn: number; // ms
+  propio: boolean;
+  revisado: boolean;
+  detectadoEn: number | null; // ms
 }
 
-const HOMOGLIFOS: Record<string, string> = { o: '0', l: '1', i: 'l', a: '4', e: '3', m: 'rn', w: 'vv' };
-const TLDS = ['com', 'net', 'org', 'mx', 'com.mx'];
-const DIA = 864e5;
-
-// Hash estable: el mismo dominio siempre produce los mismos resultados simulados
-function hash(texto: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < texto.length; i++) h = Math.imul(h ^ texto.charCodeAt(i), 16777619);
-  return h >>> 0;
-}
-
-// Variantes típicas que usan los suplantadores, a partir del nombre de un dominio
-export function variantesDe(dominio: string): { nombre: string; tecnica: Tecnica }[] {
-  const punto = dominio.indexOf('.');
-  if (punto < 2) return [];
-  const etiqueta = dominio.slice(0, punto);
-  const tld = dominio.slice(punto + 1);
-  const out: { nombre: string; tecnica: Tecnica }[] = [];
-  const agrega = (e: string, t: string, tecnica: Tecnica) => {
-    const nombre = `${e}.${t}`;
-    if (nombre !== dominio && !out.some((v) => v.nombre === nombre)) out.push({ nombre, tecnica });
+export function aSimilar(s: SimilarApi, original: string): Similar {
+  return {
+    id: s.id,
+    dominioId: s.dominioId,
+    original,
+    nombre: s.nombre,
+    tecnica: s.tecnica,
+    estado: s.estado,
+    riesgo: s.riesgo,
+    conCorreo: s.conCorreo,
+    conCertificado: s.conCertificado,
+    propio: s.propio,
+    revisado: s.revisado,
+    detectadoEn: s.detectadoEn ? Date.parse(s.detectadoEn) : null,
   };
-
-  if (etiqueta.length > 3) agrega(etiqueta.slice(0, -2) + etiqueta.slice(-1), tld, 'omision');
-  if (etiqueta.length > 3) agrega(etiqueta.slice(0, 1) + etiqueta.slice(2), tld, 'omision');
-  agrega(etiqueta.slice(0, 2) + etiqueta[1] + etiqueta.slice(2), tld, 'repeticion');
-  if (etiqueta.length > 2) agrega(etiqueta[0] + etiqueta[2] + etiqueta[1] + etiqueta.slice(3), tld, 'intercambio');
-  for (let i = 0; i < etiqueta.length; i++) {
-    const sust = HOMOGLIFOS[etiqueta[i]];
-    if (sust) {
-      agrega(etiqueta.slice(0, i) + sust + etiqueta.slice(i + 1), tld, 'homoglifo');
-      break;
-    }
-  }
-  if (etiqueta.length > 4) agrega(etiqueta.slice(0, Math.ceil(etiqueta.length / 2)) + '-' + etiqueta.slice(Math.ceil(etiqueta.length / 2)), tld, 'guion');
-  for (const t of TLDS) if (t !== tld) agrega(etiqueta, t, 'tld');
-  return out.slice(0, 7);
-}
-
-// Estado y riesgo simulados, estables por dominio
-export function simularSimilares(dominios: Dominio[], ahora = Date.now()): Similar[] {
-  const lista: Similar[] = [];
-  for (const d of dominios) {
-    for (const v of variantesDe(d.nombreDominio)) {
-      const h = hash(v.nombre);
-      const r = h % 10;
-      const estado: EstadoSimilar = r < 3 ? 'libre' : r < 6 ? 'registrado' : 'activo';
-      const conCorreo = estado === 'activo' && h % 3 !== 0;
-      const riesgo: RiesgoSimilar = estado === 'activo' ? (conCorreo || v.tecnica === 'homoglifo' ? 'alto' : 'medio') : estado === 'registrado' ? 'medio' : 'bajo';
-      lista.push({
-        id: `${d.id}|${v.nombre}`,
-        dominioId: d.id,
-        original: d.nombreDominio,
-        nombre: v.nombre,
-        tecnica: v.tecnica,
-        estado,
-        riesgo,
-        conCorreo,
-        conCertificado: estado === 'activo' && h % 4 !== 0,
-        detectadoEn: ahora - ((h >>> 8) % 20) * DIA - (h % 12) * 36e5,
-      });
-    }
-  }
-  return lista;
 }
 
 // Divide el dominio parecido en tramos para resaltar lo que cambió respecto al original
