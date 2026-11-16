@@ -77,6 +77,34 @@
     </div>
   </section>
 
+  <!-- PUNTAJE POR CATEGORÍA -->
+  @if (categorias(); as cats) {
+    <section class="panel categorias ent" style="--i: 1">
+      <header class="cat-cab">
+        <h2 class="titulo-seccion">Puntaje por categoría</h2>
+        <span class="sub">{{ categoriasEvaluadas() }} de {{ cats.length }} categorías evaluadas</span>
+      </header>
+      <div class="cat-lista">
+        @for (c of cats; track c.id) {
+          <div class="cat-fila">
+            <div class="cat-nombre">
+              <strong>{{ c.nombre }}</strong>
+              <span>Pesa {{ c.peso }}% del puntaje</span>
+            </div>
+            @if (c.puntaje !== null) {
+              <div class="cat-barra" role="img" [attr.aria-label]="c.nombre + ': ' + c.puntaje + ' de 100'">
+                <span [attr.data-tono]="tonoPuntaje(c.puntaje)" [style.width.%]="c.puntaje * k()"></span>
+              </div>
+              <strong class="cat-valor" [attr.data-tono]="tonoPuntaje(c.puntaje)">{{ c.puntaje }}</strong>
+            } @else {
+              <span class="cat-pend" title="Todavía no se evalúa o la fuente no respondió">Sin evaluar</span>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
+
   <div class="rejilla">
     <!-- HALLAZGOS -->
     <div class="principal">
@@ -99,6 +127,12 @@
                 @case ('TLS') {
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3"/></svg>
                 }
+                @case ('Cabeceras') {
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+                }
+                @case ('Correo') {
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                }
                 @case ('Reputación') {
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
                 }
@@ -120,7 +154,7 @@
             @if (h.severidad === 'info') {
               <details class="info-fila">
                 <summary><span class="ok-marca">✓</span>{{ h.titulo }}</summary>
-                <p>{{ h.descripcion }}</p>
+                <p>@for (t of trozos(h.descripcion); track $index) { @if (t.enlace) { <a class="enlace-ext" [href]="t.texto" target="_blank" rel="noopener noreferrer">Abrir informe ↗</a> } @else { <span>{{ t.texto }}</span> } }</p>
               </details>
             } @else {
               <article class="hallazgo" [attr.data-sev]="h.severidad">
@@ -128,7 +162,7 @@
                   <span class="sev" [attr.data-sev]="h.severidad">{{ sev[h.severidad] }}</span>
                   <strong>{{ h.titulo }}</strong>
                 </div>
-                <p class="h-desc">{{ h.descripcion }}</p>
+                <p class="h-desc">@for (t of trozos(h.descripcion); track $index) { @if (t.enlace) { <a class="enlace-ext" [href]="t.texto" target="_blank" rel="noopener noreferrer">Abrir informe ↗</a> } @else { <span>{{ t.texto }}</span> } }</p>
                 <p class="h-reco"><span>Qué hacer</span>{{ h.recomendacion }}</p>
               </article>
             }

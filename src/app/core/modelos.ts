@@ -26,6 +26,14 @@ export interface Hallazgo {
   recomendacion: string;
 }
 
+// Puntaje de una categoría (null = todavía sin evaluar)
+export interface CategoriaPuntaje {
+  id: string;
+  nombre: string;
+  peso: number;
+  puntaje: number | null;
+}
+
 export interface Analisis {
   id: string;
   dominioId: string;
@@ -33,6 +41,7 @@ export interface Analisis {
   puntaje: number;
   duracionMs: number;
   nivel: Nivel;
+  categorias?: CategoriaPuntaje[] | null;
   hallazgos: Hallazgo[];
 }
 

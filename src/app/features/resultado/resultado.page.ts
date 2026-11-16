@@ -6,8 +6,9 @@ import { DominiosStore } from '../../data/dominios.store';
 import { ETIQUETA_SEVERIDAD, ORDEN_SEVERIDAD } from '../../domain/severidad';
 import { AroPuntaje } from '../../shared/ui/aro-puntaje/aro-puntaje';
 import { crearAnimacion } from '../../shared/utils/animacion';
+import { trozosConEnlaces } from '../../shared/utils/enlaces';
 
-const ORDEN_CATEGORIAS = ['TLS', 'Reputación', 'Exposición', 'Subdominios'];
+const ORDEN_CATEGORIAS = ['TLS', 'Cabeceras', 'Correo', 'Reputación', 'Exposición', 'Subdominios'];
 const MENSAJE_NIVEL = {
   bueno: 'La configuración de seguridad es sólida. Revisa los puntos informativos para mantenerla así.',
   mejoras: 'Hay aspectos que conviene corregir pronto para reducir el riesgo.',
@@ -46,6 +47,7 @@ export class Resultado {
   etiqueta = ETIQUETA_NIVEL;
   sev = ETIQUETA_SEVERIDAD;
   mensaje = MENSAJE_NIVEL;
+  trozos = trozosConEnlaces;
   id = this.ruta.snapshot.paramMap.get('id') ?? '';
 
   filtros: { valor: FiltroHallazgos; texto: string }[] = [
@@ -113,6 +115,10 @@ export class Resultado {
       .sort((a, b) => ORDEN_SEVERIDAD[a.peor] - ORDEN_SEVERIDAD[b.peor] || rango(a.categoria) - rango(b.categoria));
   });
 
+  // Puntaje por categoría del último análisis (los análisis anteriores a esta función no lo tienen)
+  categorias = computed(() => this.ultimo()?.categorias ?? null);
+  categoriasEvaluadas = computed(() => (this.categorias() ?? []).filter((c) => c.puntaje !== null).length);
+
   // Últimos 8 análisis, del más antiguo al más reciente, para las barras de tendencia
   tendencia = computed(() => this.historial().slice(0, 8).reverse());
 
@@ -143,6 +149,10 @@ export class Resultado {
 
   esSensible(p: number): boolean {
     return SENSIBLES.has(p);
+  }
+
+  tonoPuntaje(p: number): 'verde' | 'ambar' | 'rojo' {
+    return p >= 80 ? 'verde' : p >= 50 ? 'ambar' : 'rojo';
   }
 
   tonoRiesgo(r: number): 'verde' | 'ambar' | 'rojo' {
