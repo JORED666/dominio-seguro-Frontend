@@ -13,11 +13,15 @@ export class SimilarCard {
   revisado = input(false);
   revisar = output<string>();
   restaurar = output<string>();
+  esMio = output<string>();
 
   estado = ETIQUETA_ESTADO;
   riesgo = ETIQUETA_RIESGO;
   tecnica = ETIQUETA_TECNICA;
 
   tramos = computed(() => tramosDe(this.similar().original, this.similar().nombre));
-  cuando = computed(() => `Detectado ${hace(this.similar().detectadoEn)}`);
+  cuando = computed(() => {
+    const t = this.similar().detectadoEn;
+    return t ? `Detectado ${hace(t)}` : 'Sin registros hasta ahora';
+  });
 }
