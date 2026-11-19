@@ -16,7 +16,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(conToken(auth.token)).pipe(
     catchError((err: HttpErrorResponse) => {
-      if (err.status !== 401 || !esApi || req.url.includes('/auth/')) return throwError(() => err);
+      if (err.status !== 401 || !esApi || /\/auth\/(login|registro|refresh|logout|mfa\/verificar)/.test(req.url)) return throwError(() => err);
       return auth.refrescar().pipe(
         switchMap((s) => next(conToken(s.token))),
         catchError((e: HttpErrorResponse) => {
