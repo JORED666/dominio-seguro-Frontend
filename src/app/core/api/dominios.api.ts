@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { tap } from 'rxjs';
 import { API_URL } from './api-url';
-import { Analisis, Dominio, ResultadoAnalisis } from '../modelos';
+import { Analisis, Dominio, ResultadoAnalisis, Verificacion } from '../modelos';
 import { SimilarApi } from '../../domain/similares';
 
 @Injectable({ providedIn: 'root' })
@@ -24,6 +24,14 @@ export class DominiosApi {
     return this.http
       .post<ResultadoAnalisis>(`${API_URL}/dominios/${id}/analizar`, {})
       .pipe(tap((r) => this.ultimoResultado.set(r)));
+  }
+
+  verificacion(id: string) {
+    return this.http.get<Verificacion>(`${API_URL}/dominios/${id}/verificacion`);
+  }
+
+  verificar(id: string) {
+    return this.http.post<Verificacion>(`${API_URL}/dominios/${id}/verificar`, {});
   }
 
   historial(id: string) {

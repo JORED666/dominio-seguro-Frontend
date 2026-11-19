@@ -1,7 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Analisis, Dominio, ETIQUETA_NIVEL, Hallazgo, Nivel, mensajeError } from '../../core/modelos';
+import { DominiosApi } from '../../core/api/dominios.api';
+import { Analisis, Dominio, ETIQUETA_NIVEL, Hallazgo, Nivel, Verificacion, mensajeError } from '../../core/modelos';
 import { DominiosStore } from '../../data/dominios.store';
 import { ETIQUETA_SEVERIDAD, ORDEN_SEVERIDAD } from '../../domain/severidad';
 import { AroPuntaje } from '../../shared/ui/aro-puntaje/aro-puntaje';
@@ -37,6 +38,7 @@ const GP = 4;
 export class Dominios {
   private store = inject(DominiosStore);
   private router = inject(Router);
+  private api = inject(DominiosApi);
 
   etiqueta = ETIQUETA_NIVEL;
   etiqSev = ETIQUETA_SEVERIDAD;
@@ -59,6 +61,13 @@ export class Dominios {
   filtro = signal<Filtro>('todos');
   busqueda = signal('');
   nuevo = '';
+
+  // Verificación de propiedad (un solo panel abierto a la vez)
+  abierto = signal<string | null>(null);
+  instr = signal<Verificacion | null>(null);
+  verificando = signal(false);
+  errorVerif = signal('');
+  copiado = signal('');
 
   // Animación de entrada de números y aros (solo la primera vez que llegan los datos)
   private anim = crearAnimacion(1000);
@@ -183,6 +192,47 @@ export class Dominios {
     });
   }
 
+  abrirVerificacion(d: Dominio) {
+    if (this.abierto() === d.id) {
+      this.abierto.set(null);
+      return;
+    }
+    this.abierto.set(d.id);
+    this.instr.set(null);
+    this.errorVerif.set('');
+    this.api.verificacion(d.id).subscribe({
+      next: (v) => this.instr.set(v),
+      error: (e) => this.errorVerif.set(mensajeError(e)),
+    });
+  }
+
+  verificar(d: Dominio) {
+    this.verificando.set(true);
+    this.errorVerif.set('');
+    this.api.verificar(d.id).subscribe({
+      next: (v) => {
+        this.instr.set(v);
+        this.verificando.set(false);
+        this.abierto.set(null);
+        this.store.cargarLista().subscribe();
+      },
+      error: (e) => {
+        this.errorVerif.set(mensajeError(e));
+        this.verificando.set(false);
+      },
+    });
+  }
+
+  copiar(texto: string, clave: string) {
+    navigator.clipboard?.writeText(texto).then(
+      () => {
+        this.copiado.set(clave);
+        setTimeout(() => this.copiado.set(''), 1500);
+      },
+      () => {},
+    );
+  }
+
   analizar(d: Dominio) {
     this.analizando.set(d.id);
     this.error.set('');
@@ -194,6 +244,8 @@ export class Dominios {
       error: (e) => {
         this.error.set(mensajeError(e));
         this.analizando.set(null);
+        // 403: el dominio aún no está verificado, se muestran las instrucciones
+        if ((e as { status?: number }).status === 403 && this.abierto() !== d.id) this.abrirVerificacion(d);
       },
     });
   }
