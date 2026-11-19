@@ -108,6 +108,38 @@
           }
         </div>
 
+        <div class="verif" [attr.data-ok]="d.verificadoEn ? 'si' : 'no'">
+          @if (d.verificadoEn) {
+            <span class="verif-estado">✔ Propiedad verificada</span>
+          } @else {
+            <span class="verif-estado">Sin verificar</span>
+            <button type="button" class="verif-enlace" (click)="abrirVerificacion(d)">{{ abierto() === d.id ? 'Ocultar' : 'Cómo verificar' }}</button>
+          }
+        </div>
+
+        @if (abierto() === d.id) {
+          <div class="verif-panel">
+            <p>Para analizar este dominio debes demostrar que es tuyo. Crea este registro en el DNS de <strong>{{ d.nombreDominio }}</strong>:</p>
+            @if (instr(); as v) {
+              <dl>
+                <dt>Tipo</dt>
+                <dd>{{ v.registro.tipo }}</dd>
+                <dt>Nombre</dt>
+                <dd><code>{{ v.registro.nombre }}</code> <button type="button" class="verif-enlace" (click)="copiar(v.registro.nombre, 'n')">{{ copiado() === 'n' ? 'Copiado' : 'Copiar' }}</button></dd>
+                <dt>Valor</dt>
+                <dd><code>{{ v.registro.valor }}</code> <button type="button" class="verif-enlace" (click)="copiar(v.registro.valor, 'v')">{{ copiado() === 'v' ? 'Copiado' : 'Copiar' }}</button></dd>
+              </dl>
+              <p class="meta">Puede tardar unos minutos en propagarse. Algunos proveedores piden solo <code>_dominio-seguro</code> como nombre.</p>
+              <button class="btn-prim" type="button" [disabled]="verificando()" (click)="verificar(d)">{{ verificando() ? 'Comprobando…' : 'Verificar ahora' }}</button>
+            } @else if (!errorVerif()) {
+              <p class="meta">Cargando…</p>
+            }
+            @if (errorVerif()) {
+              <p class="verif-error" role="alert">{{ errorVerif() }}</p>
+            }
+          </div>
+        }
+
         <div class="dom-cuerpo">
           <app-aro-puntaje [puntaje]="d.ultimoPuntaje" [nivel]="d.nivel" [progreso]="k()" [texto]="d.nivel ? 'PUNTOS' : 'SIN DATOS'" />
 

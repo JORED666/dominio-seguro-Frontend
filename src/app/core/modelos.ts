@@ -15,6 +15,14 @@ export interface Dominio {
   ultimoPuntaje: number | null;
   nivel: Nivel | null;
   creadoEn: string;
+  verificadoEn: string | null; // null: aún no demuestra que el dominio es suyo
+}
+
+// Registro DNS que el usuario debe publicar para demostrar que el dominio es suyo
+export interface Verificacion {
+  verificado: boolean;
+  verificadoEn: string | null;
+  registro: { tipo: string; nombre: string; valor: string };
 }
 
 export interface Hallazgo {
