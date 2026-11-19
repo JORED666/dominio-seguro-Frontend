@@ -6,7 +6,13 @@ import { API_URL } from '../api/api-url';
 
 interface Sesion {
   token: string;
-  usuario: { id: string; nombre: string; correo: string; rol?: string };
+  usuario: { id: string; nombre: string; correo: string; rol?: string; mfaActivo?: boolean };
+}
+
+// Respuesta del login cuando la cuenta tiene verificación en dos pasos: todavía falta el código
+export interface MfaPendiente {
+  mfaRequerido: true;
+  mfaToken: string;
 }
 
 const CLAVE = 'ds_sesion';
@@ -21,15 +27,36 @@ export class AuthService {
   readonly usuario = computed(() => this.sesion()?.usuario ?? null);
   readonly autenticado = computed(() => this.sesion() !== null);
   readonly esAdmin = computed(() => this.sesion()?.usuario.rol === 'admin');
+  readonly mfaActivo = computed(() => this.sesion()?.usuario.mfaActivo === true);
 
   get token(): string | null {
     return this.sesion()?.token ?? null;
   }
 
   login(correo: string, password: string) {
+    return this.http.post<Sesion | MfaPendiente>(`${API_URL}/auth/login`, { correo, password }).pipe(
+      tap((r) => {
+        if (!('mfaRequerido' in r)) this.guardar(r);
+      })
+    );
+  }
+
+  verificarMfa(mfaToken: string, codigo: string) {
     return this.http
-      .post<Sesion>(`${API_URL}/auth/login`, { correo, password })
+      .post<Sesion>(`${API_URL}/auth/mfa/verificar`, { mfaToken, codigo })
       .pipe(tap((s) => this.guardar(s)));
+  }
+
+  configurarMfa() {
+    return this.http.post<{ secreto: string; otpauth: string; qr: string }>(`${API_URL}/auth/mfa/configurar`, {});
+  }
+
+  activarMfa(codigo: string) {
+    return this.http.post(`${API_URL}/auth/mfa/activar`, { codigo }).pipe(tap(() => this.marcarMfa(true)));
+  }
+
+  desactivarMfa(password: string, codigo: string) {
+    return this.http.post(`${API_URL}/auth/mfa/desactivar`, { password, codigo }).pipe(tap(() => this.marcarMfa(false)));
   }
 
   registro(nombre: string, correo: string, password: string) {
@@ -54,6 +81,11 @@ export class AuthService {
     this.sesion.set(null);
     sessionStorage.removeItem(CLAVE);
     this.router.navigate(['/login']);
+  }
+
+  private marcarMfa(activo: boolean) {
+    const s = this.sesion();
+    if (s) this.guardar({ ...s, usuario: { ...s.usuario, mfaActivo: activo } });
   }
 
   // sessionStorage: la sesión se borra al cerrar la pestaña

@@ -29,11 +29,6 @@ export const routes: Routes = [
     loadComponent: () => import('./features/historial/historial.page').then((m) => m.Historial),
   },
   {
-    path: 'historial',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/historial/historial.page').then((m) => m.Historial),
-  },
-  {
     path: 'alertas',
     canActivate: [authGuard],
     loadComponent: () => import('./features/alertas/alertas.page').then((m) => m.Alertas),

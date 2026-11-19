@@ -20,6 +20,8 @@ export class Login {
   cargando = signal(false);
   error = signal('');
   verPassword = signal(false);
+  mfaToken = signal<string | null>(null);
+  codigo = '';
 
   entrar() {
     if (!this.correo || !this.password) {
@@ -29,11 +31,41 @@ export class Login {
     this.cargando.set(true);
     this.error.set('');
     this.auth.login(this.correo, this.password).subscribe({
+      next: (r) => {
+        if ('mfaRequerido' in r) {
+          this.mfaToken.set(r.mfaToken);
+          this.cargando.set(false);
+        } else {
+          this.router.navigate(['/dominios']);
+        }
+      },
+      error: (e) => {
+        this.error.set(mensajeError(e));
+        this.cargando.set(false);
+      },
+    });
+  }
+
+  verificar() {
+    const token = this.mfaToken();
+    if (!token || !/^\d{6}$/.test(this.codigo)) {
+      this.error.set('El código tiene 6 dígitos');
+      return;
+    }
+    this.cargando.set(true);
+    this.error.set('');
+    this.auth.verificarMfa(token, this.codigo).subscribe({
       next: () => this.router.navigate(['/dominios']),
       error: (e) => {
         this.error.set(mensajeError(e));
         this.cargando.set(false);
       },
     });
+  }
+
+  volver() {
+    this.mfaToken.set(null);
+    this.codigo = '';
+    this.error.set('');
   }
 }

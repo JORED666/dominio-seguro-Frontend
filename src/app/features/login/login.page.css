@@ -78,3 +78,7 @@ label { color: var(--texto); font-weight: 600; font-size: 15px; gap: 8px; }
 .pie-auth a { color: var(--acento-claro); font-weight: 600; text-decoration: none; }
 
 @media (max-width: 600px) { .tarjeta-auth { padding: 32px 22px 28px; border-radius: 22px; } h1 { font-size: 1.7rem; } }
+
+.aviso-mfa { margin: 0; text-align: center; color: var(--suave); font-size: 14px; }
+.codigo { text-align: center; letter-spacing: 0.35em; font-size: 20px; }
+.volver { align-self: center; margin-top: 0; }
