@@ -1,34 +1,46 @@
-# Dominio Seguro: Frontend
+# Dominio Seguro — Panel web
 
-Aplicación web en Angular para monitorear la seguridad de dominios en pequeñas empresas.
+Interfaz de **Dominio Seguro**, la plataforma que analiza la seguridad del dominio de una pequeña empresa y
+explica los resultados en lenguaje claro. Proyecto del curso **Seguridad Informática** (Universidad Politécnica
+de Chiapas, grupo 7C).
 
-Backend (API REST): https://github.com/JORED666/dominio-seguro-Backend
+- API y orquestación con Docker: https://github.com/JORED666/dominio-seguro-Backend
 
-## Requisitos
+## Qué incluye
 
-- Node.js 22 o superior
-- API del backend corriendo en `http://localhost:3001`
+- **Inicio, registro e inicio de sesión**, con segundo factor (código TOTP) cuando la cuenta lo tiene activo.
+- **Mis dominios:** tarjetas con puntaje, nivel, tendencia y el problema principal de cada dominio.
+- **Resultado de un análisis:** puntaje por categoría, hallazgos con "qué hacer", certificado TLS, red e historial.
+- **Historial** con gráfica de evolución, **dominios similares** (typosquatting) y **alertas**.
+- **Verificación de propiedad** del dominio mediante un registro DNS TXT.
+- **Cuenta:** configuración de MFA con código QR.
 
-## Cómo correrlo
+## Tecnología
 
-1. `npm install`
-2. `npm start`
-3. Abrir `http://localhost:4200`
+Angular 22 con componentes standalone, signals y sin zone.js; TypeScript. En producción se sirve con Nginx.
 
-La URL de la API se cambia en `src/app/core/api.ts`.
+## Desarrollo
 
-## Pantallas
+    npm ci
+    npm start        # http://localhost:4200
 
-- Inicio de sesión y registro
-- Mis dominios (lista con puntaje y estado)
-- Resultado del análisis (hallazgos, certificado, subdominios e historial)
+Necesita el backend corriendo en el puerto 3001: `proxy.conf.json` reenvía `/api` hacia él, así el navegador
+habla con un solo origen y la cookie de refresco funciona igual que en producción.
 
-## Estructura
+## Producción
 
-- `src/app/core/`: servicios, interceptor JWT, guard de rutas y modelos
-- `src/app/pages/`: una carpeta por pantalla
+El `Dockerfile` compila la aplicación y la sirve con Nginx sin privilegios (puerto 8080). Nginx reenvía `/api`
+al servicio `backend` y añade cabeceras de seguridad (`X-Content-Type-Options`, `X-Frame-Options`,
+`Referrer-Policy`, `Permissions-Policy`). El `docker-compose.yml` que levanta todo el sistema está en el
+repositorio del backend.
 
-## Pendiente
+## Seguridad en el cliente
 
-- MFA, verificación de dominio, alertas y reporte PDF
-- Rediseño visual
+- El token de acceso (15 minutos) vive solo en `sessionStorage`; el de refresco es una cookie `HttpOnly`
+  que el JavaScript no puede leer.
+- Un interceptor renueva la sesión una sola vez ante un 401 y reintenta la petición; si falla, cierra la sesión.
+- No hay secretos en el código del cliente.
+
+## Licencia
+
+[MIT](LICENSE).
