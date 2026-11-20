@@ -57,9 +57,7 @@
         </span>
       </label>
 
-      <button type="button" class="olvide" disabled title="Próximamente">
-        ¿Olvidaste tu contraseña?
-      </button>
+      <a class="olvide" routerLink="/olvide">¿Olvidaste tu contraseña?</a>
 
       <button class="boton" type="submit" [disabled]="cargando()">
         {{ cargando() ? 'Entrando…' : 'Iniciar sesión' }}

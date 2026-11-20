@@ -47,7 +47,8 @@ label { color: var(--texto); font-weight: 600; font-size: 15px; gap: 8px; }
   background: none; border: 0; padding: 0;
   color: var(--acento-claro); font: inherit; font-size: 13px; font-weight: 600;
 }
-.olvide:disabled { opacity: 0.7; cursor: not-allowed; }
+a.olvide, button.olvide { cursor: pointer; text-decoration: none; }
+.olvide:hover { text-decoration: underline; }
 
 .boton {
   height: 52px; border: 0; border-radius: 999px; cursor: pointer;
