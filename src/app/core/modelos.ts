@@ -15,6 +15,14 @@ export interface Dominio {
   ultimoPuntaje: number | null;
   nivel: Nivel | null;
   creadoEn: string;
+  verificadoEn: string | null; // null: aún no demuestra que el dominio es suyo
+}
+
+// Registro DNS que el usuario debe publicar para demostrar que el dominio es suyo
+export interface Verificacion {
+  verificado: boolean;
+  verificadoEn: string | null;
+  registro: { tipo: string; nombre: string; valor: string };
 }
 
 export interface Hallazgo {
@@ -26,6 +34,14 @@ export interface Hallazgo {
   recomendacion: string;
 }
 
+// Puntaje de una categoría (null = todavía sin evaluar)
+export interface CategoriaPuntaje {
+  id: string;
+  nombre: string;
+  peso: number;
+  puntaje: number | null;
+}
+
 export interface Analisis {
   id: string;
   dominioId: string;
@@ -33,6 +49,7 @@ export interface Analisis {
   puntaje: number;
   duracionMs: number;
   nivel: Nivel;
+  categorias?: CategoriaPuntaje[] | null;
   hallazgos: Hallazgo[];
 }
 
@@ -48,6 +65,8 @@ export interface Certificado {
 export interface ResultadoAnalisis extends Analisis {
   certificado: Certificado | null;
   subdominios: string[];
+  reputacion?: { riesgo: number; nivel: string; asn: string | null } | null;
+  exposicion?: { puertos: number[]; vulnerabilidades: string[] } | null;
 }
 
 // Extrae el mensaje de error que devuelve la API ({ "error": "..." })

@@ -1,0 +1,35 @@
+<article class="alerta" [attr.data-sev]="alerta().sev">
+  <span class="icono" aria-hidden="true">
+    @switch (alerta().sev) {
+      @case ('critica') { <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z" /><path d="M12 8v4M12 15v.5" /></svg> }
+      @case ('alta') { <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z" /><path d="M12 8v4M12 15v.5" /></svg> }
+      @case ('media') { <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19z" /><path d="M12 10v4M12 17v.5" /></svg> }
+      @case ('ok') { <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg> }
+      @default { <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8v.5" /></svg> }
+    }
+  </span>
+  <div class="cuerpo">
+    <div class="cab">
+      <strong>{{ alerta().titulo }}</strong>
+      @if (alerta().nueva && alerta().sev !== 'ok') { <span class="nueva">Nueva</span> }
+      <span class="sev-etq" [attr.data-sev]="alerta().sev">{{ etiqueta[alerta().sev] }}</span>
+    </div>
+    <p class="meta">
+      <a [routerLink]="['/dominios', alerta().dominioId]" class="dom">{{ alerta().dominio }}</a>
+      <span class="punto"></span><span>{{ alerta().categoria }}</span>
+      <span class="punto"></span><span>{{ cuando() }}</span>
+    </p>
+    <p class="detalle">{{ alerta().detalle }}</p>
+    @if (alerta().recomendacion) {
+      <p class="reco"><span>Qué hacer</span>{{ alerta().recomendacion }}</p>
+    }
+    <div class="acciones">
+      <a class="btn-sec" [routerLink]="alerta().enlace">{{ alerta().tipo === 'sin-analisis' ? 'Ir a Mis dominios' : 'Ver detalle' }}</a>
+      @if (descartada()) {
+        <button type="button" class="enlace" (click)="restaurar.emit(alerta().id)">Restaurar</button>
+      } @else {
+        <button type="button" class="enlace" (click)="descartar.emit(alerta().id)">Descartar</button>
+      }
+    </div>
+  </div>
+</article>

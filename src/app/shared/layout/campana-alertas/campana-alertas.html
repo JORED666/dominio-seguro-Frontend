@@ -1,0 +1,13 @@
+<a
+  class="icono-btn campana"
+  routerLink="/alertas"
+  [attr.aria-label]="alertas.graves() > 0 ? 'Alertas: ' + alertas.graves() + ' graves' : 'Alertas'"
+  [title]="alertas.graves() > 0 ? alertas.graves() + ' alertas graves' : 'Sin alertas graves'"
+>
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M6 9a6 6 0 1112 0c0 6 2 7 2 7H4s2-1 2-7" /><path d="M10 20a2 2 0 004 0" />
+  </svg>
+  @if (alertas.graves() > 0) {
+    <span class="punto" aria-hidden="true">{{ alertas.graves() > 9 ? '9+' : alertas.graves() }}</span>
+  }
+</a>

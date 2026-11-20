@@ -1,0 +1,84 @@
+<header class="encabezado ent" style="--i: 0">
+  <p class="etiqueta-panel">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></svg>
+    MI CUENTA
+  </p>
+  <h1>Mi cuenta</h1>
+  <p class="sub">Tus datos y las preferencias de este navegador</p>
+</header>
+
+<div class="rejilla">
+  <section class="tarjeta perfil ent" style="--i: 1">
+    <span class="avatar-grande" aria-hidden="true">{{ auth.usuario()?.nombre?.charAt(0) }}</span>
+    <div>
+      <h2>{{ auth.usuario()?.nombre }}</h2>
+      <p class="correo">{{ auth.usuario()?.correo }}</p>
+    </div>
+  </section>
+
+  <section class="tarjeta resumen ent" style="--i: 2">
+    <h2>Tu actividad</h2>
+    <dl>
+      <div><dt>Dominios</dt><dd>{{ dominios() }}</dd></div>
+      <div><dt>Análisis realizados</dt><dd>{{ analisis() }}</dd></div>
+      <div><dt>Alertas activas</dt><dd [class.ambar]="activas() > 0">{{ activas() }}</dd></div>
+    </dl>
+    <a class="enlace" routerLink="/dominios">Ir a Mis dominios →</a>
+  </section>
+
+  <section class="tarjeta ent" style="--i: 3">
+    <h2>Preferencias de este navegador</h2>
+    <p class="sub">Lo que descartas o marcas como revisado se guarda solo en este navegador.</p>
+    <ul class="prefs">
+      <li>
+        <div>
+          <strong>Alertas descartadas</strong>
+          <span>{{ alertas.descartadas().length }} guardadas</span>
+        </div>
+        <button type="button" class="sec" [disabled]="alertas.descartadas().length === 0" (click)="alertas.restaurarTodas()">Restaurar</button>
+      </li>
+      <li>
+        <div>
+          <strong>Dominios similares revisados</strong>
+          <span>{{ similaresRevisados() }} guardados</span>
+        </div>
+        <button type="button" class="sec" [disabled]="similaresRevisados() === 0" (click)="restaurarSimilares()">Restaurar</button>
+      </li>
+    </ul>
+  </section>
+
+  <section class="tarjeta ent" style="--i: 4">
+    <h2>Verificación en dos pasos</h2>
+    @if (mfaError()) {
+      <p class="mfa-error" role="alert">{{ mfaError() }}</p>
+    }
+    @if (auth.mfaActivo()) {
+      <p class="sub">Activa. Al iniciar sesión se te pedirá un código de tu app de autenticación.</p>
+      <form class="mfa-form" (ngSubmit)="desactivarMfa()">
+        <input class="mfa-campo" type="password" name="pw" [(ngModel)]="mfaPassword" placeholder="Tu contraseña" autocomplete="current-password" required />
+        <input class="mfa-campo" type="text" name="cod" [(ngModel)]="mfaCodigo" inputmode="numeric" maxlength="6" placeholder="Código de 6 dígitos" autocomplete="one-time-code" required />
+        <button type="submit" class="salir" [disabled]="mfaCargando()">Desactivar</button>
+      </form>
+    } @else if (mfaPaso() === 'qr') {
+      <p class="sub">Escanea el QR con Google Authenticator, Authy o similar y escribe el código de 6 dígitos que muestre.</p>
+      <img class="mfa-qr" [src]="mfaQr()" alt="Código QR para configurar la verificación en dos pasos" width="200" height="200" />
+      <p class="mfa-secreto">¿No puedes escanear? Escribe esta clave en la app: <code>{{ mfaSecreto() }}</code></p>
+      <form class="mfa-form" (ngSubmit)="activarMfa()">
+        <input class="mfa-campo" type="text" name="cod" [(ngModel)]="mfaCodigo" inputmode="numeric" maxlength="6" placeholder="Código de 6 dígitos" autocomplete="one-time-code" required />
+        <button type="submit" class="sec" [disabled]="mfaCargando()">Activar</button>
+      </form>
+    } @else {
+      <p class="sub">Protege tu cuenta con un código de tu celular además de la contraseña.</p>
+      <button type="button" class="sec mfa-inicio" [disabled]="mfaCargando()" (click)="configurarMfa()">Activar</button>
+    }
+  </section>
+
+  <section class="tarjeta ent" style="--i: 5">
+    <h2>Sesión</h2>
+    <p class="sub">Tu sesión se cierra sola al cerrar la pestaña del navegador.</p>
+    <button type="button" class="salir" (click)="auth.cerrarSesion()">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9" /></svg>
+      Cerrar sesión
+    </button>
+  </section>
+</div>
