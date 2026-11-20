@@ -1,0 +1,83 @@
+<app-auth-shell>
+  <section class="tarjeta-auth">
+    <h1>Elige una nueva contraseña</h1>
+
+    @if (sinEnlace) {
+      <div class="alerta" role="alert">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" /><path d="M12 7v6M12 16.5v.5" stroke-linecap="round" />
+        </svg>
+        <div>
+          <strong>Este enlace no es válido</strong>
+          <span>Pide uno nuevo desde la pantalla de inicio de sesión.</span>
+        </div>
+      </div>
+      <p class="pie-auth"><a routerLink="/olvide">Pedir un enlace nuevo</a></p>
+    } @else if (listo()) {
+      <div class="exito" role="status">
+        <strong>Contraseña actualizada</strong>
+        <span>Por seguridad cerramos todas tus sesiones. Inicia sesión con la nueva contraseña.</span>
+      </div>
+      <p class="pie-auth"><a routerLink="/login">Ir a iniciar sesión</a></p>
+    } @else {
+      <p class="subtitulo">Mínimo 12 caracteres. Este enlace sirve una sola vez.</p>
+
+      @if (error()) {
+        <div class="alerta" role="alert">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" /><path d="M12 7v6M12 16.5v.5" stroke-linecap="round" />
+          </svg>
+          <div>
+            <strong>{{ error() }}</strong>
+          </div>
+        </div>
+      }
+
+      <form (ngSubmit)="cambiar()">
+        <label>
+          Nueva contraseña
+          <span class="con-icono">
+            <input
+              class="campo"
+              [type]="verPassword() ? 'text' : 'password'"
+              name="password"
+              [(ngModel)]="password"
+              placeholder="Mínimo 12 caracteres"
+              autocomplete="new-password"
+              required
+            />
+            <button
+              type="button"
+              class="ojo"
+              (click)="verPassword.set(!verPassword())"
+              [attr.aria-label]="verPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+                @if (verPassword()) { <path d="M3 3l18 18" stroke-linecap="round" /> }
+              </svg>
+            </button>
+          </span>
+        </label>
+
+        <label>
+          Repite la contraseña
+          <input
+            class="campo"
+            [type]="verPassword() ? 'text' : 'password'"
+            name="confirmar"
+            [(ngModel)]="confirmar"
+            placeholder="Escríbela otra vez"
+            autocomplete="new-password"
+            required
+          />
+        </label>
+
+        <button class="boton" type="submit" [disabled]="cargando()">
+          {{ cargando() ? 'Guardando…' : 'Cambiar contraseña' }}
+        </button>
+      </form>
+    }
+  </section>
+</app-auth-shell>
