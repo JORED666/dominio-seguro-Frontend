@@ -65,6 +65,20 @@ export class AuthService {
       .pipe(tap((s) => this.guardar(s)));
   }
 
+  olvide(correo: string) {
+    return this.http.post<{ mensaje: string }>(`${API_URL}/auth/olvide`, { correo });
+  }
+
+  // El servidor cierra todas las sesiones de la cuenta; aquí también se limpia la del navegador
+  restablecer(token: string, password: string) {
+    return this.http.post<{ mensaje: string }>(`${API_URL}/auth/restablecer`, { token, password }).pipe(
+      tap(() => {
+        this.sesion.set(null);
+        sessionStorage.removeItem(CLAVE);
+      })
+    );
+  }
+
   // Pide un token nuevo con la cookie httpOnly. Si varias peticiones fallan a la vez, comparten una sola renovación
   refrescar(): Observable<Sesion> {
     this.enCurso ??= this.http.post<Sesion>(`${API_URL}/auth/refresh`, {}).pipe(

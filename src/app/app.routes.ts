@@ -9,6 +9,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/landing/landing.page').then((m) => m.Landing),
   },
   { path: 'login', loadComponent: () => import('./features/login/login.page').then((m) => m.Login) },
+  { path: 'olvide', loadComponent: () => import('./features/olvide/olvide.page').then((m) => m.Olvide) },
+  {
+    path: 'restablecer',
+    loadComponent: () => import('./features/restablecer/restablecer.page').then((m) => m.Restablecer),
+  },
   {
     path: 'registro',
     loadComponent: () => import('./features/registro/registro.page').then((m) => m.Registro),

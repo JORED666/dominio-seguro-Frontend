@@ -1,0 +1,42 @@
+<app-auth-shell>
+  <section class="tarjeta-auth">
+    <h1>Restablece tu contraseña</h1>
+    <p class="subtitulo">Escribe tu correo y te enviamos un enlace para elegir una nueva</p>
+
+    @if (error()) {
+      <div class="alerta" role="alert">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" /><path d="M12 7v6M12 16.5v.5" stroke-linecap="round" />
+        </svg>
+        <div><strong>{{ error() }}</strong></div>
+      </div>
+    }
+
+    @if (!enviado()) {
+      <form (ngSubmit)="enviar()">
+        <label>
+          Correo electrónico
+          <input
+            class="campo"
+            type="email"
+            name="correo"
+            [(ngModel)]="correo"
+            placeholder="tucorreo@ejemplo.com"
+            autocomplete="username"
+            required
+          />
+        </label>
+        <button class="boton" type="submit" [disabled]="cargando()">
+          {{ cargando() ? 'Enviando…' : 'Enviar enlace' }}
+        </button>
+      </form>
+    } @else {
+      <div class="exito" role="status">
+        <strong>Revisa tu correo</strong>
+        <span>Si {{ correo }} tiene una cuenta, te enviamos un enlace. Vale 30 minutos y sirve una sola vez.</span>
+      </div>
+    }
+
+    <p class="pie-auth"><a routerLink="/login">← Volver a iniciar sesión</a></p>
+  </section>
+</app-auth-shell>

@@ -1,0 +1,9 @@
+.exito {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid #22c55e; border-radius: 14px;
+  background: rgba(34, 197, 94, 0.1); color: #86efac;
+}
+.exito strong { font-size: 15px; }
+.exito span { font-size: 13px; color: #bbf7d0; }
+.exito a { color: var(--acento-claro); font-weight: 600; }
