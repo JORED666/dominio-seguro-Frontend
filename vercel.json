@@ -3,6 +3,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/frontend/browser",
   "rewrites": [
+    { "source": "/api/:file(swagger-ui.*)", "destination": "https://backend-production-50c9b2c4.up.railway.app/api/docs/:file" },
+    { "source": "/api/:file(favicon-.*)", "destination": "https://backend-production-50c9b2c4.up.railway.app/api/docs/:file" },
     { "source": "/api/docs/:path*", "destination": "https://backend-production-50c9b2c4.up.railway.app/api/docs/:path*" },
     { "source": "/api/:path*", "destination": "https://backend-production-50c9b2c4.up.railway.app/api/:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
