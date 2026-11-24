@@ -9,6 +9,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/landing/landing.page').then((m) => m.Landing),
   },
   { path: 'login', loadComponent: () => import('./features/login/login.page').then((m) => m.Login) },
+  {
+    path: 'acceso/google',
+    loadComponent: () => import('./features/acceso-google/acceso-google.page').then((m) => m.AccesoGoogle),
+  },
   { path: 'olvide', loadComponent: () => import('./features/olvide/olvide.page').then((m) => m.Olvide) },
   {
     path: 'restablecer',
