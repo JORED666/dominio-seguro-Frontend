@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { mensajeError } from '../../core/modelos';
 import { AuthShell } from '../../shared/layout/auth-shell/auth-shell';
@@ -14,6 +14,7 @@ import { AuthShell } from '../../shared/layout/auth-shell/auth-shell';
 export class Login {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private ruta = inject(ActivatedRoute);
 
   correo = '';
   password = '';
@@ -22,6 +23,17 @@ export class Login {
   verPassword = signal(false);
   mfaToken = signal<string | null>(null);
   codigo = '';
+
+  constructor() {
+    if (this.ruta.snapshot.queryParamMap.get('error') === 'google') {
+      this.error.set('No se pudo iniciar sesión con Google');
+    }
+  }
+
+  // Navegación completa (no ruta de Angular): el servidor es quien redirige a Google
+  conGoogle() {
+    window.location.href = '/api/auth/google';
+  }
 
   entrar() {
     if (!this.correo || !this.password) {
