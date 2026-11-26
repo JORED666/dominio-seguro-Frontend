@@ -70,7 +70,10 @@
         <span class="paso-etq">{{ gravesLista().length === 1 ? 'Hallazgo grave detectado' : 'Hallazgos graves detectados' }}</span>
         <ul>
           @for (h of gravesLista(); track h.titulo) {
-            <li><strong>{{ h.titulo }}</strong> · {{ h.categoria }} ({{ h.severidad === 'critica' ? 'Crítica' : 'Alta' }})</li>
+            <li style="margin-bottom: 0.6rem">
+              <strong>{{ h.titulo }}</strong> · {{ h.categoria }} ({{ h.severidad === 'critica' ? 'Crítica' : 'Alta' }})
+              <br /><small>Qué hacer: {{ h.recomendacion }}</small>
+            </li>
           }
         </ul>
       </div>
