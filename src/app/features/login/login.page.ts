@@ -28,6 +28,12 @@ export class Login {
     if (this.ruta.snapshot.queryParamMap.get('error') === 'google') {
       this.error.set('No se pudo iniciar sesión con Google');
     }
+    // Volvió de Google y la cuenta tiene verificación en dos pasos: se pide el código
+    const pendiente = sessionStorage.getItem('ds_mfa_pendiente');
+    if (pendiente) {
+      sessionStorage.removeItem('ds_mfa_pendiente');
+      this.mfaToken.set(pendiente);
+    }
   }
 
   // Navegación completa (no ruta de Angular): el servidor es quien redirige a Google

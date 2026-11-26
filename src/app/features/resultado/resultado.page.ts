@@ -81,7 +81,13 @@ export class Resultado {
     return { todos: todos.length, problemas: todos.length - info, info };
   });
 
-  graves = computed(() => (this.ultimo()?.hallazgos ?? []).filter((h) => h.severidad === 'critica' || h.severidad === 'alta').length);
+  // Hallazgos graves (críticos y altos), los más graves primero
+  gravesLista = computed(() =>
+    (this.ultimo()?.hallazgos ?? [])
+      .filter((h) => h.severidad === 'critica' || h.severidad === 'alta')
+      .sort((a, b) => ORDEN_SEVERIDAD[a.severidad] - ORDEN_SEVERIDAD[b.severidad])
+  );
+  graves = computed(() => this.gravesLista().length);
 
   // El hallazgo más grave que no sea informativo, con su recomendación
   primerPaso = computed(() => {
