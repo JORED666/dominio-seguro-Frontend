@@ -65,6 +65,17 @@
       <div class="tile"><strong class="n-ok">{{ conteo().info }}</strong><span>Informativos</span></div>
     </div>
 
+    @if (gravesLista().length > 0) {
+      <div class="paso" [attr.data-ok]="false">
+        <span class="paso-etq">{{ gravesLista().length === 1 ? 'Hallazgo grave detectado' : 'Hallazgos graves detectados' }}</span>
+        <ul>
+          @for (h of gravesLista(); track h.titulo) {
+            <li><strong>{{ h.titulo }}</strong> · {{ h.categoria }} ({{ h.severidad === 'critica' ? 'Crítica' : 'Alta' }})</li>
+          }
+        </ul>
+      </div>
+    }
+
     <div class="paso" [attr.data-ok]="!primerPaso()">
       <span class="paso-etq">{{ primerPaso() ? 'Primer paso recomendado' : 'Todo en orden' }}</span>
       <p>
