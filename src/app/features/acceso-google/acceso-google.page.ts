@@ -13,6 +13,13 @@ export class AccesoGoogle implements OnInit {
   private router = inject(Router);
 
   ngOnInit() {
+    // Cuenta con verificación en dos pasos: el servidor manda el token de verificación en el fragmento (#)
+    const mfa = new URLSearchParams(location.hash.slice(1)).get('mfa');
+    if (mfa) {
+      sessionStorage.setItem('ds_mfa_pendiente', mfa);
+      this.router.navigate(['/login'], { replaceUrl: true });
+      return;
+    }
     this.auth.refrescar().subscribe({
       next: () => this.router.navigate(['/dominios'], { replaceUrl: true }),
       error: () => this.router.navigate(['/login'], { queryParams: { error: 'google' }, replaceUrl: true }),

@@ -36,7 +36,7 @@
       <strong class="stat-valor">{{ n(cuentas().activas) }}</strong>
       <span class="stat-pie">por revisar</span>
     </article>
-    <article class="stat ent" style="--i: 2">
+    <article class="stat ent" style="--i: 2; cursor: pointer" role="button" tabindex="0" title="Ver las alertas graves" (click)="filtro.set('graves')" (keydown.enter)="filtro.set('graves')">
       <span class="stat-titulo">Graves</span>
       <strong class="stat-valor" [class.rojo]="cuentas().graves > 0">{{ n(cuentas().graves) }}</strong>
       <span class="stat-pie">críticas y altas</span>
